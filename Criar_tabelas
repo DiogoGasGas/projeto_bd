@@ -1,0 +1,151 @@
+-- SQLite
+CREATE TABLE Departamentos (
+    ID_depart INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    num_funcionarios INT,
+    ID_gerente INT UNIQUE
+);
+
+-- 2. Criar Funcionarios
+CREATE TABLE Funcionarios (
+    ID_fun INT PRIMARY KEY,
+    NIF VARCHAR(20) UNIQUE NOT NULL,
+    primeiro_nome VARCHAR(50) NOT NULL,
+    ultimo_nome VARCHAR(50) NOT NULL,
+    nome_rua VARCHAR(100),
+    nome_localidade VARCHAR(100),
+    codigo_postal VARCHAR(10),
+    num_telemovel VARCHAR(15),
+    Email VARCHAR(100),
+    data_nascimento DATE,
+    cargo VARCHAR(50),
+    ID_depart INT,
+    FOREIGN KEY (ID_depart) REFERENCES Departamentos(ID_depart)
+);
+
+-- 3. Adicionar FK de gerente (1:1 com Funcionarios)
+ALTER TABLE Departamentos
+ADD CONSTRAINT fk_gerente
+FOREIGN KEY (ID_gerente) REFERENCES Funcionarios(ID_fun);
+
+
+
+CREATE TABLE Remuneracoes (
+    ID_fun INT,
+    Data_inicio DATE,
+    Data_fim DATE,
+    PRIMARY KEY (ID_fun, Data_inicio),
+    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+);
+
+CREATE TABLE Salario (
+    ID_fun INT,
+    Data_inicio DATE,
+    salario_bruto DECIMAL(10,2),
+    descontos DECIMAL(10,2),
+    salario_liquido DECIMAL(10,2),
+    PRIMARY KEY (ID_fun, Data_inicio),
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+);
+
+CREATE TABLE Beneficios (
+    ID_fun INT,
+    Data_inicio DATE,
+    tipo VARCHAR(50),
+    valor DECIMAL(10,2),
+    descricao VARCHAR(255),
+    PRIMARY KEY (ID_fun, Data_inicio, tipo),
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+);
+
+CREATE TABLE Ferias (
+    ID_fun INT,
+    data_inicio DATE,
+    data_fim DATE,
+    num_dias INT,
+    num_dias_permitidos INT,
+    estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
+    PRIMARY KEY (ID_fun, data_inicio),
+    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+);
+
+
+INSERT INTO Departamentos (ID_depart, nome, num_funcionarios, ID_gerente)
+VALUES
+(1, 'Recursos Humanos', 2, NULL),
+(2, 'Tecnologia da Informação', 3, NULL),
+(3, 'Financeiro', 2, NULL),
+(4, 'Marketing', 2, NULL),
+(5, 'Vendas', 1, NULL);
+
+INSERT INTO Funcionarios VALUES
+(1, '123456789', 'João', 'Silva', 'Rua das Flores', 'Lisboa', '1000-001', '912345678', 'joao.silva@email.com', '1988-05-14', 'Gestor de RH', 1),
+(2, '234567890', 'Maria', 'Ferreira', 'Av. da Liberdade', 'Lisboa', '1000-150', '913456789', 'maria.ferreira@email.com', '1990-07-23', 'Técnica de RH', 1),
+
+(3, '345678901', 'Pedro', 'Gomes', 'Rua do Sol', 'Porto', '4000-200', '914567890', 'pedro.gomes@email.com', '1985-11-09', 'Diretor de TI', 2),
+(4, '456789012', 'Ana', 'Costa', 'Rua da Alegria', 'Porto', '4000-300', '915678901', 'ana.costa@email.com', '1992-03-17', 'Programadora', 2),
+(5, '567890123', 'Tiago', 'Oliveira', 'Rua Azul', 'Braga', '4700-100', '917890123', 'tiago.oliveira@email.com', '1989-06-08', 'Administrador de Sistemas', 2),
+
+(6, '678901234', 'Rita', 'Santos', 'Rua Verde', 'Coimbra', '3000-150', '916789012', 'rita.santos@email.com', '1995-12-01', 'Gestora Financeira', 3),
+(7, '789012345', 'Hugo', 'Rodrigues', 'Rua Velha', 'Aveiro', '3800-150', '919012345', 'hugo.rodrigues@email.com', '1984-10-04', 'Contabilista', 3),
+
+(8, '890123456', 'Carla', 'Pereira', 'Rua Nova', 'Faro', '8000-200', '918901234', 'carla.pereira@email.com', '1991-09-22', 'Chefe de Marketing', 4),
+(9, '901234567', 'Sara', 'Marques', 'Rua Central', 'Setúbal', '2900-300', '920123456', 'sara.marques@email.com', '1993-04-11', 'Assistente de Marketing', 4),
+
+(10, '012345678', 'André', 'Lopes', 'Rua dos Cravos', 'Leiria', '2400-250', '921234567', 'andre.lopes@email.com', '1996-01-30', 'Vendedor', 5);
+
+UPDATE Departamentos SET ID_gerente = 1 WHERE ID_depart = 1;
+UPDATE Departamentos SET ID_gerente = 3 WHERE ID_depart = 2;
+UPDATE Departamentos SET ID_gerente = 6 WHERE ID_depart = 3;
+UPDATE Departamentos SET ID_gerente = 8 WHERE ID_depart = 4;
+UPDATE Departamentos SET ID_gerente = 10 WHERE ID_depart = 5;
+
+
+INSERT INTO Remuneracoes VALUES
+(1, '2024-01-01', NULL),
+(2, '2024-02-01', NULL),
+(3, '2024-01-01', NULL),
+(4, '2024-03-01', NULL),
+(5, '2024-01-15', NULL),
+(6, '2024-02-10', NULL),
+(7, '2024-01-20', NULL),
+(8, '2024-03-05', NULL),
+(9, '2024-02-25', NULL),
+(10, '2024-04-01', NULL);
+
+INSERT INTO Salario VALUES
+(1, '2024-01-01', 2500.00, 400.00, 2100.00),
+(2, '2024-02-01', 1800.00, 300.00, 1500.00),
+(3, '2024-01-01', 3200.00, 500.00, 2700.00),
+(4, '2024-03-01', 2000.00, 350.00, 1650.00),
+(5, '2024-01-15', 1500.00, 250.00, 1250.00),
+(6, '2024-02-10', 2200.00, 400.00, 1800.00),
+(7, '2024-01-20', 2600.00, 450.00, 2150.00),
+(8, '2024-03-05', 3100.00, 480.00, 2620.00),
+(9, '2024-02-25', 2800.00, 420.00, 2380.00),
+(10, '2024-04-01', 900.00, 100.00, 800.00);
+
+INSERT INTO Beneficios VALUES
+(1, '2024-01-01', 'Subsídio Alimentação', 150.00, 'Cartão refeição'),
+(1, '2024-01-01', 'Seguro Saúde', 50.00, 'Plano básico'),
+(2, '2024-02-01', 'Subsídio Alimentação', 120.00, 'Vale refeição'),
+(3, '2024-01-01', 'Carro Empresa', 300.00, 'Uso total'),
+(4, '2024-03-01', 'Subsídio Transporte', 80.00, 'Passe mensal'),
+(5, '2024-01-15', 'Seguro Saúde', 40.00, 'Plano standard'),
+(6, '2024-02-10', 'Subsídio Alimentação', 100.00, 'Cartão refeição'),
+(7, '2024-01-20', 'Telemóvel Empresa', 60.00, 'Uso profissional'),
+(8, '2024-03-05', 'Subsídio Alimentação', 130.00, 'Cartão refeição'),
+(9, '2024-02-25', 'Seguro Saúde', 70.00, 'Plano premium'),
+(10, '2024-04-01', 'Subsídio Alimentação', 90.00, 'Vale refeição');
+
+INSERT INTO Ferias VALUES
+(1, '2024-07-01', '2024-07-14', 14, 22, 'Aprovado'),
+(2, '2024-08-05', '2024-08-15', 11, 20, 'Por aprovar'),
+(3, '2024-09-10', '2024-09-25', 16, 25, 'Aprovado'),
+(4, '2024-06-20', '2024-06-28', 9, 18, 'Rejeitado'),
+(5, '2024-12-22', '2025-01-04', 14, 21, 'Aprovado'),
+(6, '2024-05-01', '2024-05-10', 10, 19, 'Por aprovar'),
+(7, '2024-10-10', '2024-10-20', 11, 24, 'Aprovado'),
+(8, '2024-08-01', '2024-08-14', 14, 22, 'Por aprovar'),
+(9, '2024-09-01', '2024-09-10', 10, 20, 'Aprovado'),
+(10, '2024-07-15', '2024-07-25', 11, 15, 'Rejeitado');
