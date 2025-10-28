@@ -3,7 +3,8 @@ CREATE TABLE Departamentos (
     ID_depart INT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     num_funcionarios INT,
-    ID_gerente INT UNIQUE
+    ID_gerente INT UNIQUE,
+    CHECK(nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Logística', 'Compras', 'Jurídico', 'Pesquisa e Desenvolvimento', 'Suporte Técnico', 'Produção', 'Qualidade', 'Serviço ao Cliente', 'Relações Públicas', 'Planeamento Estratégico', 'Gestão de Projetos', 'Segurança e Saúde no Trabalho', 'Treinamento e Desenvolvimento', 'Contabilidade', 'Inovação Digital'))
 );
 
 -- 2. Criar Funcionarios
@@ -66,8 +67,10 @@ CREATE TABLE Ferias (
     num_dias_permitidos INT,
     estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
     PRIMARY KEY (ID_fun, data_inicio),
-    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun),
+    CHECK(data_fim > data_inicio)
 );
+    
 
 
 INSERT INTO Departamentos (ID_depart, nome, num_funcionarios, ID_gerente)
@@ -149,3 +152,4 @@ INSERT INTO Ferias VALUES
 (8, '2024-08-01', '2024-08-14', 14, 22, 'Por aprovar'),
 (9, '2024-09-01', '2024-09-10', 10, 20, 'Aprovado'),
 (10, '2024-07-15', '2024-07-25', 11, 15, 'Rejeitado');
+
