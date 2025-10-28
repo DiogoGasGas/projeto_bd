@@ -51,7 +51,10 @@ CREATE TABLE Salario (
     descontos DECIMAL(10,2),
     salario_liquido DECIMAL(10,2),
     PRIMARY KEY (ID_fun, Data_inicio),
-    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio),
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+        
 );
 
 CREATE TABLE Beneficios (
@@ -61,7 +64,9 @@ CREATE TABLE Beneficios (
     valor DECIMAL(10,2),
     descricao VARCHAR(255),
     PRIMARY KEY (ID_fun, Data_inicio, tipo),
-    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio),
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     CHECK ( tipo IN ( 'Subsídio Alimentação' , 'Seguro Saúde', 'Carro Empresa' , 'Subsídio Transporte' ,  'Telemóvel Empresa')
 );
 
@@ -74,6 +79,8 @@ CREATE TABLE Ferias (
     estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
     PRIMARY KEY (ID_fun, data_inicio),
     FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun),
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
     CHECK(data_fim > data_inicio)
     CHECK( num_dias <= num_dias_permitidos)
     CHECK ( estado_aprov IN( 'Aprovado' , 'Rejeitado')
@@ -160,6 +167,7 @@ INSERT INTO Ferias VALUES
 (8, '2024-08-01', '2024-08-14', 14, 22, 'Por aprovar'),
 (9, '2024-09-01', '2024-09-10', 10, 20, 'Aprovado'),
 (10, '2024-07-15', '2024-07-25', 11, 15, 'Rejeitado');
+
 
 
 
