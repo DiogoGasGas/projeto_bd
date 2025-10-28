@@ -39,6 +39,8 @@ CREATE TABLE Remuneracoes (
     Data_fim DATE,
     PRIMARY KEY (ID_fun, Data_inicio),
     FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     CHECK(data_fim > data_inicio)
 );
 
@@ -158,6 +160,7 @@ INSERT INTO Ferias VALUES
 (8, '2024-08-01', '2024-08-14', 14, 22, 'Por aprovar'),
 (9, '2024-09-01', '2024-09-10', 10, 20, 'Aprovado'),
 (10, '2024-07-15', '2024-07-25', 11, 15, 'Rejeitado');
+
 
 
 
