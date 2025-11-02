@@ -2,15 +2,15 @@
 CREATE TABLE Funcionarios (
     ID_fun INT PRIMARY KEY,
     NIF VARCHAR(20) UNIQUE NOT NULL,
-    primeiro_nome VARCHAR(50) NOT NULL,
-    ultimo_nome VARCHAR(50) NOT NULL,
-    nome_rua VARCHAR(100),
-    nome_localidade VARCHAR(100),
-    codigo_postal VARCHAR(10),
-    num_telemovel VARCHAR(15),
+    Primeiro_nome VARCHAR(50) NOT NULL,
+    Ultimo_nome VARCHAR(50) NOT NULL,
+    Nome_rua VARCHAR(100),
+    Nome_localidade VARCHAR(100),
+    Codigo_postal VARCHAR(10),
+    Num_telemovel VARCHAR(15),
     Email VARCHAR(100) UNIQUE,
-    data_nascimento DATE,
-    cargo VARCHAR(50)
+    Data_nascimento DATE,
+    Cargo VARCHAR(50)
     -- A coluna ID_depart será adicionada mais tarde
 );
 
@@ -18,12 +18,12 @@ CREATE TABLE Funcionarios (
 -- 2. Criar a tabela Departamentos, já com a referência ao gerente
 CREATE TABLE Departamentos (
 ID_depart INT PRIMARY KEY,
-nome VARCHAR(100) NOT NULL,
+Nome VARCHAR(100) NOT NULL,
 ID_gerente INT UNIQUE,
 FOREIGN KEY (ID_gerente) REFERENCES Funcionarios(ID_fun)
 ON DELETE SET NULL
 ON UPDATE CASCADE,
-CHECK(nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Logística', 'Compras', 'Jurídico', 'Pesquisa e Desenvolvimento', 'Suporte Técnico', 'Produção', 'Qualidade', 'Serviço ao Cliente', 'Relações Públicas', 'Planeamento Estratégico', 'Gestão de Projetos', 'Segurança e Saúde no Trabalho', 'Treinamento e Desenvolvimento', 'Contabilidade', 'Inovação Digital'))
+CHECK(Nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Logística', 'Compras', 'Jurídico', 'Pesquisa e Desenvolvimento', 'Suporte Técnico', 'Produção', 'Qualidade', 'Serviço ao Cliente', 'Relações Públicas', 'Planeamento Estratégico', 'Gestão de Projetos', 'Segurança e Saúde no Trabalho', 'Treinamento e Desenvolvimento', 'Contabilidade', 'Inovação Digital'))
 );
 
 
