@@ -1,0 +1,91 @@
+
+CREATE TABLE Departamentos (
+    ID_depart SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    num_funcionarios INT,
+    ID_gerente INT UNIQUE, -- Apenas a coluna, a restrição vem depois
+    CHECK(nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Logística', 'Compras', 'Jurídico', 'Pesquisa e Desenvolvimento', 'Suporte Técnico', 'Produção', 'Qualidade', 'Serviço ao Cliente', 'Relações Públicas', 'Planeamento Estratégico', 'Gestão de Projetos', 'Segurança e Saúde no Trabalho', 'Treinamento e Desenvolvimento', 'Contabilidade', 'Inovação Digital'))
+);
+
+-- 2. Criar a tabela Funcionarios, já com a referência a Departamentos
+-- Isto funciona porque a tabela Departamentos já existe.
+CREATE TABLE Funcionarios (
+    ID_fun SERIAL PRIMARY KEY,
+    NIF VARCHAR(20) UNIQUE NOT NULL,
+    primeiro_nome VARCHAR(50) NOT NULL,
+    ultimo_nome VARCHAR(50) NOT NULL,
+    nome_rua VARCHAR(100),
+    nome_localidade VARCHAR(100),
+    codigo_postal VARCHAR(10),
+    num_telemovel VARCHAR(15),
+    Email VARCHAR(100) UNIQUE,
+    data_nascimento DATE,
+    cargo VARCHAR(50),
+    ID_depart INT,
+    FOREIGN KEY (ID_depart) REFERENCES Departamentos(ID_depart)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+-- 3. Adicionar a chave estrangeira em Departamentos (O SEU COMANDO ORIGINAL!)
+-- Agora isto funciona perfeitamente, fechando o ciclo.
+ALTER TABLE Departamentos
+ADD CONSTRAINT fk_gerente
+FOREIGN KEY (ID_gerente) REFERENCES Funcionarios(ID_fun)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
+
+
+-- 4. Criar as restantes tabelas (o código é o mesmo, funciona perfeitamente)
+
+CREATE TABLE Remuneracoes (
+    ID_fun INT,
+    Data_inicio DATE,
+    Data_fim DATE,
+    PRIMARY KEY (ID_fun, Data_inicio),
+    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CHECK(data_fim > data_inicio)
+);
+
+CREATE TABLE Salario (
+    ID_fun INT,
+    Data_inicio DATE,
+    salario_bruto DECIMAL(10,2),
+    descontos DECIMAL(10,2),
+    salario_liquido DECIMAL(10,2),
+    PRIMARY KEY (ID_fun, Data_inicio),
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE Beneficios (
+    ID_fun INT,
+    Data_inicio DATE,
+    tipo VARCHAR(50),
+    valor DECIMAL(10,2),
+    descricao VARCHAR(255),
+    PRIMARY KEY (ID_fun, Data_inicio, tipo),
+    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CHECK (tipo IN ('Subsídio Alimentação' , 'Seguro Saúde', 'Carro Empresa' , 'Subsídio Transporte' , 'Telemóvel Empresa'))
+);
+
+CREATE TABLE Ferias (
+    ID_fun INT,
+    data_inicio DATE,
+    data_fim DATE,
+    num_dias INT,
+    num_dios_permitidos INT,
+    estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
+    PRIMARY KEY (ID_fun, data_inicio),
+    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CHECK(data_fim > data_inicio),
+    CHECK(num_dias <= num_dios_permitidos),
+    CHECK(estado_aprov IN ('Aprovado' , 'Rejeitado', 'Por aprovar'))
+);
