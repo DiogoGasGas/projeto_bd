@@ -64,7 +64,6 @@ CREATE TABLE Beneficios (
     Data_inicio DATE,
     tipo VARCHAR(50),
     valor DECIMAL(10,2),
-    descricao VARCHAR(255),
     PRIMARY KEY (ID_fun, Data_inicio, tipo),
     FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
         ON DELETE CASCADE
@@ -91,7 +90,7 @@ CREATE TABLE Ferias (
 
 CREATE TABLE Dependentes (
 ID_Fun INT,
-nome VARCHAR(100), -- Aumentei o tamanho para nomes completos
+nome VARCHAR(100), 
 sexo VARCHAR(10),
 data_nascimento DATE,
 parentesco VARCHAR(20),
