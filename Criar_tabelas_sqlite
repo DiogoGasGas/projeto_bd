@@ -23,7 +23,7 @@ ID_gerente INT UNIQUE,
 FOREIGN KEY (ID_gerente) REFERENCES Funcionarios(ID_fun)
 ON DELETE SET NULL
 ON UPDATE CASCADE,
-CHECK(Nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Logística', 'Compras', 'Jurídico', 'Pesquisa e Desenvolvimento', 'Suporte Técnico', 'Produção', 'Qualidade', 'Serviço ao Cliente', 'Relações Públicas', 'Planeamento Estratégico', 'Gestão de Projetos', 'Segurança e Saúde no Trabalho', 'Treinamento e Desenvolvimento', 'Contabilidade', 'Inovação Digital'))
+CHECK(Nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Qualidade', 'Atendimento ao Cliente', 'Jurídico'))
 );
 
 
@@ -187,6 +187,7 @@ PRIMARY KEY (ID_for),
 CHECK (Data_fim IS NULL OR Data_fim > Data_inicio), 
 CHECK (Estado IN ('Planeada', 'Em curso', 'Concluida', 'Cancelada'))
 );
+
 
 CREATE TABLE Teve_Formacao (
 ID_Fun INT,
