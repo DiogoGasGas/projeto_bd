@@ -109,7 +109,6 @@ PRIMARY KEY (ID_Fun, Data),
 FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_fun)    
 ON DELETE CASCADE
 ON UPDATE CASCADE
-CHECK (Estado IN ('Justificada', 'Injustificada', 'Pendente'))
 );
 
 
