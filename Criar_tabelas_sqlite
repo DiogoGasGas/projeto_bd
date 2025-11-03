@@ -109,8 +109,9 @@ PRIMARY KEY (ID_Fun, Data),
 FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_fun)    
 ON DELETE CASCADE
 ON UPDATE CASCADE
+CHECK (Estado IN ('Justificada', 'Injustificada', 'Pendente'))
 );
--- Versão um pouco mais detalhada (opcional): Estado VARCHAR(20) DEFAULT 'Pendente', CHECK (Estado IN ('Justificada', 'Injustificada', 'Pendente'))
+
 
 CREATE TABLE Historico_empresas (
 ID_Fun INT,
