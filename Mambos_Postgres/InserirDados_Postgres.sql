@@ -664,7 +664,7 @@ INSERT INTO Historico_empresas (ID_Fun, Nome_empresa, Nome_departamento, Cargo, 
 (50, 'Pereira e Filhos', 'Recursos Humanos', 'Mergulhador', '2020-08-16', '2022-06-12');
 
 -- Dados para Candidatos
-INSERT INTO Candidatos (ID_cand, Nome, Email, Telemovel, CV, Carta_motivação) VALUES
+INSERT INTO Candidatos (ID_cand, Nome, Email, Telemovel, CV, Carta_motivacao) VALUES
 (1, 'Tomé Figueiredo', 'rfreitas@example.org', '963165661', NULL, NULL),
 (2, 'Mélanie Gomes-Amorim', 'hmonteiro@example.net', '(351) 923000153', NULL, NULL),
 (3, 'Ivo Monteiro', 'ycastro@example.com', '(351) 913 701 649', NULL, NULL),

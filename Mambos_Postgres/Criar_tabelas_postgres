@@ -8,7 +8,7 @@ CREATE TABLE Funcionarios (
     Nome_rua VARCHAR(100),
     Nome_localidade VARCHAR(100),
     Codigo_postal VARCHAR(10),
-    Num_telemovel VARCHAR(15),
+    Num_telemovel VARCHAR(20),
     Email VARCHAR(100) UNIQUE,
     Data_nascimento DATE,
     Cargo VARCHAR(50)
