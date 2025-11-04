@@ -209,7 +209,15 @@ WHERE av.autoavaliacao IS NULL;
 ------------------------------------------------------------------------------------
 
 --15. Numero de faltas por departamento
-
+SELECT 
+    d.id_depart,
+    d.nome,
+    COUNT(fal.id_fun) AS total_faltas
+FROM departamentos d
+LEFT JOIN funcionarios AS f ON d.id_depart = f.id_depart
+LEFT JOIN faltas AS fal ON f.id_fun = fal.id_fun
+GROUP BY d.nome, d.id_depart
+ORDER BY total_faltas DESC;
 
 ---------------------------------------------
 --- 16- Departamentos cuja média salarial é maior que a média total, o seu número de funcionários e a sua média
@@ -235,5 +243,9 @@ HAVING
     )
 ORDER BY 
     Media_Salarial_Departamento DESC;
+
+------------------------------------------------------------------------------------------
+--17. Relacao entre funcionarios com mais formacoes e melhor avaliacao
+
 
 
