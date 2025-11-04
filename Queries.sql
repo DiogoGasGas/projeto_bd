@@ -244,8 +244,24 @@ HAVING
 ORDER BY 
     Media_Salarial_Departamento DESC;
 
+---------------------------------------------
+--- 17- Funcionários que já trabalharam na mesma empresa
+
+SELECT h.nome_empresa, STRING_AGG(f.primeiro_nome || ' ' || f.ultimo_nome, ', ') AS funcionarios
+FROM historico_empresas as h
+JOIN funcionarios f ON f.id_fun = h.id_fun
+group by h.nome_empresa
+HAVING COUNT(f.id_fun) > 1;
+
 ------------------------------------------------------------------------------------------
---17. Relacao entre funcionarios com mais formacoes e melhor avaliacao
+--18. Funcionários sem faltas registadas
 
+select f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo, count(fal.data) as total_faltas
+from funcionarios f
+left join faltas fal on f.id_fun = fal.id_fun
+group by f.primeiro_nome, f.ultimo_nome
+having count(fal.data) = 0
 
+------------------------------------------------------------------------------------------
+--19. 
 
