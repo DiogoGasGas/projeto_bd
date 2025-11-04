@@ -86,7 +86,6 @@ CREATE TABLE ferias (
     data_inicio DATE,
     data_fim DATE,
     num_dias INT,
-    num_dias_permitidos INT,
     estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
     PRIMARY KEY (id_fun, data_inicio),
     FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
