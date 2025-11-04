@@ -211,5 +211,29 @@ WHERE av.autoavaliacao IS NULL;
 --15. Numero de faltas por departamento
 
 
+---------------------------------------------
+--- 16- 
+  
+SELECT 
+    d.Nome,
+    COUNT(f.ID_fun) AS Numero_Funcionarios,
+    AVG(s.salario_bruto) AS Media_Salarial_Departamento
+FROM 
+    Departamentos d
+JOIN 
+    Funcionarios f ON d.ID_depart = f.ID_depart
+JOIN 
+    Remuneracoes r ON f.ID_fun = r.ID_fun
+JOIN 
+    Salario s ON r.ID_fun = s.ID_fun AND r.Data_inicio = s.Data_inicio
+GROUP BY 
+    d.Nome
+HAVING 
+    AVG(s.salario_bruto) > (
+        SELECT AVG(salario_bruto) 
+        FROM Salario
+    )
+ORDER BY 
+    Media_Salarial_Departamento DESC;
 
 
