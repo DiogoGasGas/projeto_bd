@@ -197,17 +197,18 @@ ORDER BY num_dependentes desc;
 
 ------------------------------------------------------------------------------------
 
---14. media de faltas injustificadas por departamento
-SELECT
-d.nome,
-AVG(a.avaliacao) AS media_avaliacoes
+--14. Funcionário que não fizeram auto-avaliação
+SELECT 
+    f.primeiro_nome,
+    f.ultimo_nome,
+    av.autoavaliacao
+from funcionarios AS f 
+JOIN avaliacoes AS av ON f.id_fun = av.id_fun
+WHERE av.autoavaliacao IS NULL;
 
-FROM departamentos AS d
-LEFT JOIN avaliacoes AS a
-  ON d.id_fun = a.id_fun
-GROUP BY d.nome;
+------------------------------------------------------------------------------------
 
-
+--15. Numero de faltas por departamento
 
 
 
