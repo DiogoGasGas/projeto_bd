@@ -274,3 +274,10 @@ LEFT JOIN teve_formacao AS teve ON f.id_fun = teve.id_fun
 GROUP BY d.nome, d.id_depart
 ORDER BY taxa_adesao DESC;
 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--20.funcionarios que moram em lisboa, trabalharam em 
+
+
+
+
