@@ -89,6 +89,45 @@ END;
 
 
 
+-- Primeiro adiciona a coluna num_candidatos
+ALTER TABLE Vagas ADD COLUMN num_candidatos INT DEFAULT 0;
+
+-- Sempre que entra candidato
+CREATE TRIGGER trg_update_num_candidatos
+AFTER INSERT ON Candidato_a
+FOR EACH ROW
+BEGIN
+    UPDATE Vagas
+    SET num_candidatos = num_candidatos + 1
+    WHERE ID_vaga = NEW.ID_vaga;
+
+    UPDATE Vagas
+    SET Estado = 'Fechada'
+    WHERE ID_vaga = NEW.ID_vaga AND num_candidatos >= 10;
+END;
+
+-- Sempre que sai candidato
+CREATE TRIGGER trg_decrease_num_candidatos
+AFTER DELETE ON Candidato_a
+FOR EACH ROW
+BEGIN
+    UPDATE Vagas
+    SET num_candidatos = CASE 
+        WHEN num_candidatos > 0 THEN num_candidatos - 1 
+        ELSE 0 
+    END
+    WHERE ID_vaga = OLD.ID_vaga;
+END;
+
+
+
+
+
+
+
+
+
+
 
 
 
