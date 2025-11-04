@@ -189,15 +189,11 @@ ORDER BY media_candidatos DESC;
 -- 13. Número de dependentes
 -- Objetivo : Número de dependenntes de cada funcionário
 
-SELECT 
-  f.id_funcionario                            -- id do funcionário
-  f.nome                                      -- nome do funcionário
-  COUNT(d.id_funcionario) AS num_dependentes  -- contar o numero de pessoas associadas ao id do funcionário
-
+SELECT f.id_fun,f.primeiro_nome, COUNT(d.id_fun) AS num_dependentes  
 FROM funcionarios As f
-LEFT JOIN dependentes AS d ON f.id_funcionarios = d.id_funcionarios  -- criar tabela incluindo todos os funcionários associando aos dependentes
-GROUP BY f.id_funcionario, f.nome
-ORDER BY num_dependentes desc;
+LEFT JOIN dependentes AS d ON f.id_fun = d.id_fun  -- criar tabela incluindo todos os funcionários associando aos dependentes
+GROUP BY f.id_fun, f.primeiro_nome
+ORDER BY num_dependentes desc;  
 
 ------------------------------------------------------------------------------------
 
