@@ -1,4 +1,4 @@
--- 1. Total da remuneração de cada funcionário
+ufer-- 1. Total da remuneração de cada funcionário
 
 -- Objetivo: somar todas as remunerações (salário + benefícios) de cada funcionário
 SELECT
@@ -276,7 +276,7 @@ ORDER BY taxa_adesao DESC;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---20.funcionarios que moram em lisboa, trabalharam na empresa MAarques
+--20.funcionarios que moram em lisboa, trabalharam na empresa MAarques e auferem atualmente mais de 1200 euros
 
 
 
