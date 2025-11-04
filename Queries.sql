@@ -185,3 +185,14 @@ GROUP BY dep.id_departamento
 ORDER BY media_candidatos DESC;
 
 ---------------------------------------------------------------------------------------
+
+-- n dependenntes de cada funcionário
+
+SELECT 
+f.id_funcionario
+f.nome
+COUNT(d.id_
+
+
+
+
