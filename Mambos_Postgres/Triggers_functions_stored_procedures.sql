@@ -38,18 +38,6 @@ EXECUTE FUNCTION cria_utilizador();
 
 
 
-CREATE OR REPLACE FUNCTION set_data_registo()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.data_registo := CURRENT_DATE;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_data_registo
-BEFORE INSERT ON funcionarios
-FOR EACH ROW
-EXECUTE FUNCTION set_data_registo();
 
 
 
