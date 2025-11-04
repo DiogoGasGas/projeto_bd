@@ -189,20 +189,51 @@ ORDER BY media_candidatos DESC;
 -- 13. Número de dependentes
 -- Objetivo : Número de dependenntes de cada funcionário
 
-SELECT 
-  f.id_funcionario                            -- id do funcionário
-  f.nome                                      -- nome do funcionário
-  COUNT(d.id_funcionario) AS num_dependentes  -- contar o numero de pessoas associadas ao id do funcionário
-
+SELECT f.id_fun,f.primeiro_nome, COUNT(d.id_fun) AS num_dependentes  
 FROM funcionarios As f
-LEFT JOIN dependentes AS d ON f.id_funcionarios = d.id_funcionarios  -- criar tabela incluindo todos os funcionários associando aos dependentes
-GROUP BY f.id_funcionario, f.nome
-ORDER BY num_dependentes desc;
+LEFT JOIN dependentes AS d ON f.id_fun = d.id_fun  -- criar tabela incluindo todos os funcionários associando aos dependentes
+GROUP BY f.id_fun, f.primeiro_nome
+ORDER BY num_dependentes desc;  
 
 ------------------------------------------------------------------------------------
 
+--14. Funcionário que não fizeram auto-avaliação
+SELECT 
+    f.primeiro_nome,
+    f.ultimo_nome,
+    av.autoavaliacao
+from funcionarios AS f 
+JOIN avaliacoes AS av ON f.id_fun = av.id_fun
+WHERE av.autoavaliacao IS NULL;
+
+------------------------------------------------------------------------------------
+
+--15. Numero de faltas por departamento
 
 
-
+---------------------------------------------
+--- 16- Departamentos cuja média salarial é maior que a média total, o seu número de funcionários e a sua média
+  
+SELECT 
+    d.Nome,
+    COUNT(f.ID_fun) AS Numero_Funcionarios,
+    AVG(s.salario_bruto) AS Media_Salarial_Departamento
+FROM 
+    Departamentos d
+JOIN 
+    Funcionarios f ON d.ID_depart = f.ID_depart
+JOIN 
+    Remuneracoes r ON f.ID_fun = r.ID_fun
+JOIN 
+    Salario s ON r.ID_fun = s.ID_fun AND r.Data_inicio = s.Data_inicio
+GROUP BY 
+    d.Nome
+HAVING 
+    AVG(s.salario_bruto) > (
+        SELECT AVG(salario_bruto) 
+        FROM Salario
+    )
+ORDER BY 
+    Media_Salarial_Departamento DESC;
 
 

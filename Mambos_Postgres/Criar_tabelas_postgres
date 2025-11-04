@@ -1,243 +1,230 @@
-SET search_path TO bd054_schema, public;
+set search_path TO bd054_schema, public;
 
-CREATE TABLE Funcionarios (
-    ID_fun INT PRIMARY KEY,
-    NIF VARCHAR(20) UNIQUE NOT NULL,
-    Primeiro_nome VARCHAR(50) NOT NULL,
-    Ultimo_nome VARCHAR(50) NOT NULL,
-    Nome_rua VARCHAR(100),
-    Nome_localidade VARCHAR(100),
-    Codigo_postal VARCHAR(10),
-    Num_telemovel VARCHAR(20),
-    Email VARCHAR(100) UNIQUE,
-    Data_nascimento DATE,
-    Cargo VARCHAR(50)
-    -- A coluna ID_depart será adicionada mais tarde
+CREATE TABLE funcionarios (
+    id_fun INT PRIMARY KEY,
+    nif VARCHAR(20) UNIQUE NOT NULL,
+    primeiro_nome VARCHAR(50) NOT NULL,
+    ultimo_nome VARCHAR(50) NOT NULL,
+    nome_rua VARCHAR(100),
+    nome_localidade VARCHAR(100),
+    codigo_postal VARCHAR(10),
+    num_telemovel VARCHAR(20),
+    email VARCHAR(100) UNIQUE,
+    data_nascimento DATE,
+    cargo VARCHAR(50)
 );
 
-
--- 2. Criar a tabela Departamentos, já com a referência ao gerente
-CREATE TABLE Departamentos (
-ID_depart INT PRIMARY KEY,
-Nome VARCHAR(100) NOT NULL,
-ID_gerente INT UNIQUE,
-FOREIGN KEY (ID_gerente) REFERENCES Funcionarios(ID_fun)
-ON DELETE SET NULL
-ON UPDATE CASCADE,
-CHECK(Nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Qualidade', 'Atendimento ao Cliente', 'Jurídico'))
+CREATE TABLE departamentos (
+    id_depart INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    id_gerente INT UNIQUE,
+    FOREIGN KEY (id_gerente) REFERENCES funcionarios(id_fun)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+    CHECK(nome IN ('Recursos Humanos', 'Tecnologia da Informação', 'Financeiro', 'Marketing', 'Vendas', 'Qualidade', 'Atendimento ao Cliente', 'Jurídico'))
 );
 
+ALTER TABLE funcionarios
+ADD COLUMN id_depart INT;
 
--- 3. Adicionar a coluna ID_depart que faltava à tabela Funcionarios
--- O SQLite permite adicionar uma coluna e definir a sua chave estrangeira no mesmo comando.
-ALTER TABLE Funcionarios
-ADD COLUMN ID_depart INT
-REFERENCES Departamentos(ID_depart)
+ALTER TABLE funcionarios
+ADD FOREIGN KEY (id_depart) REFERENCES departamentos(id_depart)
 ON DELETE SET NULL
 ON UPDATE CASCADE;
 
-
-CREATE TABLE Remuneracoes (
-    ID_fun INT,
-    Data_inicio DATE,
-    Data_fim DATE,
-    PRIMARY KEY (ID_fun, Data_inicio),
-    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+CREATE TABLE remuneracoes (
+    id_fun INT,
+    data_inicio DATE,
+    data_fim DATE,
+    PRIMARY KEY (id_fun, data_inicio),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CHECK(data_fim > data_inicio)
 );
 
-CREATE TABLE Salario (
-    ID_fun INT,
-    Data_inicio DATE,
+CREATE TABLE salario (
+    id_fun INT,
+    data_inicio DATE,
     salario_bruto DECIMAL(10,2),
     descontos DECIMAL(10,2),
     salario_liquido DECIMAL(10,2),
-    PRIMARY KEY (ID_fun, Data_inicio),
-    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+    PRIMARY KEY (id_fun, data_inicio),
+    FOREIGN KEY (id_fun, data_inicio) REFERENCES remuneracoes(id_fun, data_inicio)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
-CREATE TABLE Beneficios (
-    ID_fun INT,
-    Data_inicio DATE,
+CREATE TABLE beneficios (
+    id_fun INT,
+    data_inicio DATE,
     tipo VARCHAR(50),
     valor DECIMAL(10,2),
-    PRIMARY KEY (ID_fun, Data_inicio, tipo),
-    FOREIGN KEY (ID_fun, Data_inicio) REFERENCES Remuneracoes(ID_fun, Data_inicio)
+    PRIMARY KEY (id_fun, data_inicio, tipo),
+    FOREIGN KEY (id_fun, data_inicio) REFERENCES remuneracoes(id_fun, data_inicio)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    CHECK (tipo IN ('Subsídio Alimentação' , 'Seguro Saúde', 'Carro Empresa' , 'Subsídio Transporte' , 'Telemóvel Empresa'))
+    CHECK (tipo IN ('Subsídio Alimentação', 'Seguro Saúde', 'Carro Empresa', 'Subsídio Transporte', 'Telemóvel Empresa'))
 );
 
-CREATE TABLE Ferias (
-    ID_fun INT,
+CREATE TABLE ferias (
+    id_fun INT,
     data_inicio DATE,
     data_fim DATE,
     num_dias INT,
     num_dias_permitidos INT,
     estado_aprov VARCHAR(20) DEFAULT 'Por aprovar',
-    PRIMARY KEY (ID_fun, data_inicio),
-    FOREIGN KEY (ID_fun) REFERENCES Funcionarios(ID_fun)
+    PRIMARY KEY (id_fun, data_inicio),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CHECK(data_fim > data_inicio),
     CHECK(num_dias <= num_dias_permitidos),
-    CHECK(estado_aprov IN ('Aprovado' , 'Rejeitado', 'Por aprovar'))
+    CHECK(estado_aprov IN ('Aprovado', 'Rejeitado', 'Por aprovar'))
+);
+
+CREATE TABLE dependentes (
+    id_fun INT,
+    nome VARCHAR(100),
+    sexo VARCHAR(10),
+    data_nascimento DATE,
+    parentesco VARCHAR(20),
+    PRIMARY KEY(id_fun, nome),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun) 
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+    CHECK (sexo IN ('Masculino', 'Feminino', 'Outro')) 
+);
+
+CREATE TABLE faltas (
+    id_fun INT,
+    data DATE,
+    justificacao VARCHAR(255),
+    PRIMARY KEY (id_fun, data),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)    
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE historico_empresas (
+    id_fun INT,
+    nome_empresa VARCHAR(50),
+    nome_departamento VARCHAR(50),
+    cargo VARCHAR(100), 
+    data_inicio DATE,
+    data_fim DATE,
+    PRIMARY KEY (id_fun, data_inicio),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+    CHECK (data_fim IS NULL OR data_fim > data_inicio)
+);
+
+CREATE TABLE candidatos (
+    id_cand INT,
+    nome VARCHAR(100),
+    email VARCHAR(100),
+    telemovel VARCHAR(20), 
+    cv BYTEA, 
+    carta_motivacao BYTEA,
+    PRIMARY KEY (id_cand)
+);
+
+CREATE TABLE vagas (
+    id_vaga INT,
+    data_abertura DATE,
+    estado VARCHAR(20),
+    id_depart INT,
+    PRIMARY KEY (id_vaga),
+    FOREIGN KEY (id_depart) REFERENCES departamentos(id_depart),
+    CHECK (estado IN ('Aberta', 'Fechada', 'Suspensa'))
+);
+
+CREATE TABLE candidato_a (
+    id_cand INT,
+    id_vaga INT,
+    data_cand DATE NOT NULL DEFAULT CURRENT_DATE,
+    estado VARCHAR(20) DEFAULT 'Submetido',
+    id_recrutador INT,
+    PRIMARY KEY (id_cand, id_vaga),
+    FOREIGN KEY (id_cand) REFERENCES candidatos(id_cand)
+    ON DELETE CASCADE,
+    FOREIGN KEY (id_vaga) REFERENCES vagas(id_vaga)
+    ON DELETE CASCADE,
+    FOREIGN KEY (id_recrutador) REFERENCES funcionarios(id_fun)
+    ON DELETE SET NULL,
+    CHECK (estado IN ('Submetido', 'Em análise', 'Entrevista', 'Rejeitado', 'Contratado'))
+);
+
+CREATE TABLE requisitos_vaga (
+    id_vaga INT,
+    requisito VARCHAR(100),
+    PRIMARY KEY (id_vaga, requisito),
+    FOREIGN KEY (id_vaga) REFERENCES vagas(id_vaga)
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE formacoes (
+    id_for INT,
+    nome_formacao VARCHAR(100),
+    descricao VARCHAR(255), 
+    data_inicio DATE,
+    data_fim DATE,
+    estado VARCHAR(20) DEFAULT 'Planeada',
+    PRIMARY KEY (id_for),
+    CHECK (data_fim IS NULL OR data_fim > data_inicio), 
+    CHECK (estado IN ('Planeada', 'Em curso', 'Concluida', 'Cancelada'))
+);
+
+CREATE TABLE teve_formacao (
+    id_fun INT,
+    id_for INT, 
+    certificado BYTEA,
+    data_inicio DATE,
+    data_fim DATE,
+    PRIMARY KEY (id_fun, id_for),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
+    ON DELETE CASCADE   
+    ON UPDATE CASCADE,
+    FOREIGN KEY (id_for) REFERENCES formacoes(id_for)
+    ON DELETE CASCADE   
+    ON UPDATE CASCADE,
+    CHECK (data_fim IS NULL OR data_fim >= data_inicio) 
+);
+
+CREATE TABLE avaliacoes (
+    id_fun INT,
+    id_avaliador INT,
+    data DATE,
+    avaliacao BYTEA,
+    criterios VARCHAR(500),
+    autoavaliacao VARCHAR(500),
+    PRIMARY KEY (id_fun, id_avaliador, data),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+    FOREIGN KEY (id_avaliador) REFERENCES funcionarios(id_fun)
+    ON DELETE SET NULL 
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE utilizadores (
+    id_fun INT,
+    password VARCHAR(30) NOT NULL,
+    PRIMARY KEY (id_fun),
+    FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE permissoes (
+    id_fun INT,
+    permissao VARCHAR(40),
+    PRIMARY KEY(id_fun, permissao),
+    FOREIGN KEY(id_fun) REFERENCES funcionarios(id_fun)
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE
 );
 
 
-CREATE TABLE Dependentes (
-ID_Fun INT,
-nome VARCHAR(100), 
-sexo VARCHAR(10),
-data_nascimento DATE,
-parentesco VARCHAR(20),
-PRIMARY KEY(ID_Fun, nome),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_fun) 
-ON DELETE CASCADE
-ON UPDATE CASCADE, 
-CHECK (sexo IN ('Masculino', 'Feminino', 'Outro')) 
-);
-
-CREATE TABLE Faltas (
-ID_Fun INT,
-Data DATE,
-Justificacao VARCHAR(255),
-PRIMARY KEY (ID_Fun, Data),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_fun)    
-ON DELETE CASCADE
-ON UPDATE CASCADE
-);
-
-
-CREATE TABLE Historico_empresas (
-ID_Fun INT,
-Nome_empresa VARCHAR(50),
-Nome_departamento VARCHAR(50),
-Cargo VARCHAR(50), 
-Data_inicio DATE,
-Data_fim DATE,
-PRIMARY KEY (ID_Fun, Data_inicio),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_Fun)
-ON DELETE CASCADE
-ON UPDATE CASCADE,
-CHECK (Data_fim IS NULL OR Data_fim > Data_inicio)
-);
-
-
-CREATE TABLE Candidatos (
-ID_cand INT,
-Nome VARCHAR(100),
-Email VARCHAR(100),
-Telemovel VARCHAR(20), 
-CV BLOB, 
-Carta_motivação BLOB,
-PRIMARY KEY (ID_cand)
-);
-
-
-CREATE TABLE Vagas (
-ID_vaga INT,
-Data_abertura DATE,
-Estado VARCHAR(20),
-ID_depart INT,
-PRIMARY KEY (ID_vaga),
-FOREIGN KEY (ID_depart) REFERENCES Departamentos(ID_depart),
-CHECK (Estado IN ('Aberta', 'Fechada', 'Suspensa'))
-);
-
-
-CREATE TABLE Candidato_a (
-ID_cand INT,
-ID_Vaga INT,
-Data_cand DATE NOT NULL DEFAULT CURRENT_DATE,
-Estado VARCHAR(20) DEFAULT 'Submetido',
-ID_recrutador INT,
-PRIMARY KEY (ID_cand, ID_Vaga),
-FOREIGN KEY (ID_cand) REFERENCES Candidatos(ID_cand)
-ON DELETE CASCADE,
-FOREIGN KEY (ID_Vaga) REFERENCES Vagas(ID_Vaga)
-ON DELETE CASCADE,
-FOREIGN KEY (ID_recrutador) REFERENCES Funcionarios(ID_Fun)
-ON DELETE SET NULL,
-CHECK (Estado IN ('Submetido', 'Em análise', 'Entrevista', 'Rejeitado', 'Contratado'))
-);
-
-
-CREATE TABLE Requisitos_vaga (
-ID_vaga INT,
-Requisito VARCHAR(100),
-PRIMARY KEY (ID_vaga, Requisito),
-FOREIGN KEY (ID_vaga) REFERENCES Vagas(ID_vaga)
-ON DELETE CASCADE 
-ON UPDATE CASCADE
-);
-
-
-CREATE TABLE Formacoes (
-ID_for INT,
-Nome_formacao VARCHAR(100),
-Descricao VARCHAR(255), 
-Data_inicio DATE,
-Data_fim DATE,
-Estado VARCHAR(20) DEFAULT 'Planeada',
-PRIMARY KEY (ID_for),
-CHECK (Data_fim IS NULL OR Data_fim > Data_inicio), 
-CHECK (Estado IN ('Planeada', 'Em curso', 'Concluida', 'Cancelada'))
-);
-
-
-CREATE TABLE Teve_Formacao (
-ID_Fun INT,
-ID_for INT, 
-Certificado BLOB,
-Data_inicio DATE,
-Data_fim DATE,
-PRIMARY KEY (ID_Fun, ID_for),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_fun)
-ON DELETE CASCADE   
-ON UPDATE CASCADE,
-FOREIGN KEY (ID_for) REFERENCES Formacoes(ID_for)
-ON DELETE CASCADE   
-ON UPDATE CASCADE
-CHECK (Data_fim IS NULL OR Data_fim >= Data_inicio) 
-);
-
-
-CREATE TABLE Avaliacoes (
-ID_Fun INT,
-ID_avaliador INT,
-Data DATE,
-Avaliacao BLOB,
-Criterios VARCHAR(500),
-Autoavaliacao VARCHAR(500),
-PRIMARY KEY (ID_Fun, ID_avaliador, Data),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_Fun)
-ON DELETE CASCADE
-ON UPDATE CASCADE,
-FOREIGN KEY (ID_avaliador) REFERENCES Funcionarios(ID_Fun)
-ON DELETE SET NULL 
-ON UPDATE CASCADE
-);
-
-CREATE TABLE Utilizadores (
-ID_Fun INT,
-Password VARCHAR(30) NOT NULL,
-PRIMARY KEY (ID_Fun),
-FOREIGN KEY (ID_Fun) REFERENCES Funcionarios(ID_Fun)
-ON DELETE CASCADE
-ON UPDATE CASCADE
-);
-
-
-CREATE TABLE Permissoes (
-ID_Fun INT,
-Permissao VARCHAR(40),
-PRIMARY KEY(ID_Fun, Permissao),
-FOREIGN KEY(ID_Fun) REFERENCES Funcionarios(ID_Fun)
-ON DELETE CASCADE 
-ON UPDATE CASCADE
-);
