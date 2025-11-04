@@ -201,6 +201,16 @@ ORDER BY num_dependentes desc;
 
 ------------------------------------------------------------------------------------
 
+--14. media de faltas injustificadas por departamento
+SELECT 
+d.nome
+AVG(COUNT(f.justificacao) AS media_faltas
+
+FROM departamento AS d
+LEFT JOIN faltas AS f
+GROUP BY d.nome
+WHERE justificacao = 'Injustificado'
+ORDER BY media faltas desc;
 
 
 
