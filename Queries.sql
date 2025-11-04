@@ -263,5 +263,14 @@ group by f.primeiro_nome, f.ultimo_nome
 having count(fal.data) = 0
 
 ------------------------------------------------------------------------------------------
---19. 
+--19. Taxa de aderência a formações por departamento
+
+SELECT 
+    d.nome,
+    ROUND((COUNT(DISTINCT teve.id_fun)::decimal / calcular_num_funcionarios_departamento(d.id_depart)::decimal) * 100, 2) AS taxa_adesao
+FROM departamentos AS d
+LEFT JOIN funcionarios AS f ON d.id_depart = f.id_depart
+LEFT JOIN teve_formacao AS teve ON f.id_fun = teve.id_fun
+GROUP BY d.nome, d.id_depart
+ORDER BY taxa_adesao DESC;
 
