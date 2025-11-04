@@ -212,7 +212,7 @@ WHERE av.autoavaliacao IS NULL;
 
 
 ---------------------------------------------
---- 16- 
+--- 16- Departamentos cuja média salarial é maior que a média total, o seu número de funcionários e a sua média
   
 SELECT 
     d.Nome,
