@@ -61,7 +61,27 @@ INSERT INTO Funcionarios (ID_fun, NIF, Primeiro_nome, Ultimo_nome, Nome_rua, Nom
 (47, '283684321', 'Laura', 'Matos', 'Rua Miguel Gomes', 'Fátima', '1516-957', '(351) 918 304 063', 'costarenato@example.net', '1964-12-26', 'Assistente', 8),
 (48, '283684322', 'Fernando', 'Leite', 'Avenida de Mota', 'Oliveira de Azeméis', '1437-259', '(351) 282897880', 'beatriz52@example.net', '2002-01-09', 'Assistente', 2),
 (49, '283684323', 'Inês', 'Rocha', 'Praça Melissa Vieira', 'Loures', '9560-734', '(351) 914385570', 'flor83@example.com', '1982-07-07', 'Analista', 8),
-(50, '283684324', 'Edgar', 'Torres', 'Alameda de Pires', 'Mangualde', '6828-570', '936 649 434', 'noah93@example.com', '2001-01-13', 'Assistente', 2);
+(50, '283684324', 'Edgar', 'Torres', 'Alameda de Pires', 'Mangualde', '6828-570', '936 649 434', 'noah93@example.com', '2001-01-13', 'Assistente', 2),
+(51, '283684330', 'Afonso', 'Lopes', 'Avenida da Europa', 'Viseu', '3500-001', '910010051', 'afonso.lopes@example.net', '1985-04-12', 'Analista', 2),
+(52, '283684331', 'Susana', 'Cunha', 'Rua dos Mercadores', 'Évora', '7000-002', '931020052', 'susana.cunha@example.com', '1990-11-25', 'Desenvolvedor', 4),
+(53, '283684332', 'Hugo', 'Pinto', 'Travessa da Misericórdia', 'Guimarães', '4800-003', '962030053', 'hugo.pinto@example.org', '1975-02-03', 'Coordenador', 6),
+(54, '283684333', 'Telma', 'Vieira', 'Largo da Oliveira', 'Setúbal', '2900-004', '913040054', 'telma.vieira@example.net', '1992-07-19', 'Analista', 7),
+(55, '283684334', 'Vítor', 'Magalhães', 'Rua Nova da Alfândega', 'Braga', '4700-005', '934050055', 'vitor.maga@example.com', '1988-09-08', 'Desenvolvedor', 8),
+(56, '283684335', 'Cláudia', 'Tavares', 'Praça do Marquês', 'Aveiro', '3800-006', '965060056', 'claudia.tav@example.org', '1995-01-28', 'Analista', 2),
+(57, '283684336', 'Gabriel', 'Baptista', 'Rua do Prior', 'Viana do Castelo', '4900-007', '916070057', 'gabriel.bap@example.net', '1983-10-05', 'Coordenador', 4),
+(58, '283684337', 'Sara', 'Castro', 'Avenida 24 de Julho', 'Faro', '8000-008', '937080058', 'sara.castro@example.com', '1979-06-15', 'Desenvolvedor', 6),
+(59, '283684338', 'Ricardo', 'Alves', 'Rua da Alegria', 'Portimão', '8500-009', '968090059', 'ricardo.alves@example.org', '1998-03-22', 'Analista', 7),
+(60, '283684339', 'Daniela', 'Duarte', 'Avenida João XXI', 'Coimbra', '3000-010', '919100060', 'daniela.duarte@example.net', '1987-12-01', 'Desenvolvedor', 8),
+(61, '283684340', 'Filipe', 'Gomes', 'Rua do Poço', 'Leiria', '2400-011', '930110061', 'filipe.gomes@example.com', '1970-05-17', 'Analista', 5),
+(62, '283684341', 'Patrícia', 'Faria', 'Rua da Madalena', 'Santarem', '2000-012', '961120062', 'patricia.faria@example.org', '1993-08-30', 'Coordenador', 4),
+(63, '283684342', 'Nuno', 'Jesus', 'Praça da Batalha', 'Vila Real', '5000-013', '912130063', 'nuno.jesus@example.net', '1981-04-04', 'Desenvolvedor', 6),
+(64, '283684343', 'Joana', 'Reis', 'Rua do Almada', 'Castelo Branco', '6000-014', '933140064', 'joana.reis@example.com', '1996-11-14', 'Analista', 7),
+(65, '283684344', 'André', 'Carvalho', 'Avenida de Roma', 'Beja', '7800-015', '964150065', 'andre.carvalho@example.org', '1972-01-20', 'Desenvolvedor', 8),
+(66, '283684345', 'Marta', 'Sousa', 'Rua de São Bento', 'Guarda', '6300-016', '915160066', 'marta.sousa@example.net', '1989-03-29', 'Coordenador', 2),
+(67, '283684346', 'Paulo', 'Costa', 'Largo Camões', 'Portalegre', '7300-017', '936170067', 'paulo.costa@example.com', '1994-10-07', 'Analista', 4),
+(68, '283684347', 'Rita', 'Lemos', 'Rua de Santo Ildefonso', 'Bragança', '5300-018', '967180068', 'rita.lemos@example.org', '1986-06-24', 'Desenvolvedor', 6),
+(69, '283684348', 'Luís', 'Pacheco', 'Avenida da Índia', 'Lisboa', '1400-019', '918190069', 'luis.pacheco@example.net', '1991-08-03', 'Analista', 7),
+(70, '283684349', 'Mafalda', 'Rocha', 'Praça do Chile', 'Porto', '4200-020', '939200070', 'mafalda.rocha@example.com', '1978-01-10', 'Coordenador', 8);
 
 -- 3. Atualização dos Gerentes nos Departamentos
 UPDATE Departamentos SET ID_gerente = 12 WHERE ID_depart = 1;
