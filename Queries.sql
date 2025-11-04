@@ -203,7 +203,7 @@ d.nome,
 AVG(a.avaliacao) AS media_avaliacoes
 
 FROM departamentos AS d
-LEFT JOIN avaliacao AS a
+LEFT JOIN avaliacoes AS a
   ON d.id_fun = a.id_fun
 GROUP BY d.nome;
 
