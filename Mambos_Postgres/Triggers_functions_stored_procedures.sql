@@ -1,19 +1,86 @@
---Triggers
 
-CREATE OR REPLACE FUNCTION calc_num_dias_ferias()
+
+
+set search_path to bd054_schema, public;
+
+
+-- triggers
+
+CREATE OR REPLACE FUNCTION calc_salario_liquido()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.num_dias := NEW.data_fim - NEW.data_inicio;
+    -- Calcula o salário líquido automaticamente
+    NEW.salario_liquido := NEW.salario_bruto - NEW.descontos;
+
+    -- Evita salário líquido negativo
+    IF NEW.salario_liquido < 0 THEN
+        RAISE EXCEPTION 'O salário líquido não pode ser negativo: bruto=% descontos=%', 
+            NEW.salario_bruto, NEW.descontos;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_calc_num_dias_ferias
-BEFORE INSERT ON ferias
+-- Trigger associado
+CREATE TRIGGER trg_calc_salario_liquido
+BEFORE INSERT OR UPDATE ON salario
 FOR EACH ROW
-EXECUTE FUNCTION calc_num_dias_ferias();
+EXECUTE FUNCTION calc_salario_liquido();
 
 
+set search_path to bd054_schema, public;
+CREATE OR REPLACE FUNCTION validar_dias_ferias()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.num_dias > NEW.num_dias_permitidos THEN
+        RAISE EXCEPTION 'O funcionário % não pode tirar % dias, máximo permitido é %', 
+            NEW.id_fun, NEW.num_dias, NEW.num_dias_permitidos;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_dias_ferias
+BEFORE INSERT OR UPDATE ON ferias
+FOR EACH ROW
+EXECUTE FUNCTION validar_dias_ferias();
+
+
+
+
+CREATE OR REPLACE FUNCTION registrar_mudanca_cargo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.cargo IS DISTINCT FROM NEW.cargo THEN
+        INSERT INTO historico_empresas (id_fun, nome_empresa, nome_departamento, cargo, data_inicio, data_fim)
+        VALUES (NEW.id_fun, 'Empresa Atual', 'Departamento Atual', NEW.cargo, CURRENT_DATE, NULL);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_registrar_mudanca_cargo
+AFTER UPDATE ON funcionarios
+FOR EACH ROW
+EXECUTE FUNCTION registrar_mudanca_cargo();
+
+
+
+CREATE OR REPLACE FUNCTION validar_idade_funcionario()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.data_nascimento > CURRENT_DATE - INTERVAL '16 years' THEN
+        RAISE EXCEPTION 'O funcionário % tem idade inferior a 16 anos', NEW.primeiro_nome || ' ' || NEW.ultimo_nome;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validar_idade_funcionario
+BEFORE INSERT ON funcionarios
+FOR EACH ROW
+EXECUTE FUNCTION validar_idade_funcionario();
 
 
 
@@ -40,9 +107,6 @@ EXECUTE FUNCTION cria_utilizador();
 
 
 
-
-
-
 CREATE OR REPLACE FUNCTION delete_permissoes()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -61,100 +125,89 @@ EXECUTE FUNCTION delete_permissoes();
 
 
 
-ALTER TABLE departamentos ADD COLUMN num_funcionarios INT DEFAULT 0;
 
-CREATE OR REPLACE FUNCTION incrementa_funcionarios()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.id_depart IS NOT NULL THEN
-        UPDATE departamentos
-        SET num_funcionarios = num_funcionarios + 1
-        WHERE id_depart = NEW.id_depart;
-    END IF;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_incrementa_funcionarios
-AFTER INSERT ON funcionarios
-FOR EACH ROW
-EXECUTE FUNCTION incrementa_funcionarios();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- functions
+
+--num funcioanrios
+set search_path to bd054_schema, public;
+create or replace function calcular_num_total_funcionarios(p_id_fun INT)
+returns INT as $$
+declare
+    v_num_total_funcionarios INT;
+begin
+    select count(*) into v_num_total_funcionarios
+    from funcionarios
+    where id_fun = p_id_fun;
+
+    return v_num_total_funcionarios;
+end;
+$$ language plpgsql;
+
+
+
+    --num funcionarios / departamento
+
+    create or replace function calcular_num_funcionarios_departamento(p_id_depart INT)
+    returns INT as $$
+    declare
+        v_num_funcionarios_departamento INT;
+    begin
+        select count(*) into v_num_funcionarios_departamento
+        from funcionarios
+        where id_depart = p_id_depart;
+
+        return v_num_funcionarios_departamento;
+    end;
+    $$ language plpgsql;
+
+
+
+
+--num aderentes / formacao
+
 
 
 
 set search_path to bd054_schema, public;
+create or replace function calcular_num_aderentes_formacao(p_id_for INT)
+returns INT as $$
+declare
+    v_num_aderentes_formacao INT;
+begin
 
-CREATE OR REPLACE FUNCTION incrementa_funcionarios()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.id_depart IS NOT NULL THEN
-        UPDATE departamentos
-        SET num_funcionarios = num_funcionarios + 1
-        WHERE id_depart = NEW.id_depart;
-    END IF;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
+    select count(*) into v_num_aderentes_formacao
+    from formacoes
+    where id_for = p_id_for;
 
-CREATE TRIGGER trg_incrementa_funcionarios
-AFTER INSERT ON funcionarios
-FOR EACH ROW
-EXECUTE FUNCTION incrementa_funcionarios();
-
-
-set search_path to bd054_schema, public;
-
-
-ALTER TABLE vagas ADD COLUMN num_candidatos INT DEFAULT 0;
-
-CREATE OR REPLACE FUNCTION update_num_candidatos()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE vagas
-    SET num_candidatos = num_candidatos + 1
-    WHERE id_vaga = NEW.id_vaga;
-
-    UPDATE vagas
-    SET estado = 'Fechada'
-    WHERE id_vaga = NEW.id_vaga AND num_candidatos >= 10;
-
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_update_num_candidatos
-AFTER INSERT ON candidato_a
-FOR EACH ROW
-EXECUTE FUNCTION update_num_candidatos();
+    return v_num_aderentes_formacao;
+end;
+$$ language plpgsql;
 
 
 
 
 
-CREATE OR REPLACE FUNCTION decrease_num_candidatos()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE vagas
-    SET num_candidatos = CASE 
-        WHEN num_candidatos > 0 THEN num_candidatos - 1
-        ELSE 0 
-    END
-    WHERE id_vaga = OLD.id_vaga;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_decrease_num_candidatos
-AFTER DELETE ON candidato_a
-FOR EACH ROW
-EXECUTE FUNCTION decrease_num_candidatos();
-
-
-
-
--- Functions
-
-set search_path TO bd054_schema, public;
 CREATE OR REPLACE FUNCTION calc_idade(data_nascimento DATE)
 RETURNS INT AS $$
 DECLARE
@@ -190,7 +243,7 @@ $$ LANGUAGE plpgsql;
 
 
 
-set search_path to bd054_schema, public;
+
 CREATE OR REPLACE FUNCTION calcular_total_dias_permitidos(p_id_fun INT)
 RETURNS INT AS $$
 DECLARE
@@ -233,7 +286,10 @@ $$ LANGUAGE plpgsql;
 
 
 
+
+
 -- procedures
+
 
 CREATE OR REPLACE PROCEDURE aprovar_ferias_proc(p_id_fun INT, p_data_inicio DATE)
 LANGUAGE plpgsql
@@ -251,7 +307,6 @@ $$;
 
 
 
-set search_path to bd054_schema, public;
 CREATE OR REPLACE PROCEDURE adicionar_candidatura_proc(
     p_id_cand INT, 
     p_id_vaga INT, 
@@ -266,7 +321,7 @@ END;
 $$;
 
 
-set search_path to bd054_schema, public;
+
 CREATE OR REPLACE PROCEDURE adicionar_uma_formacao(
     p_id_for INT,
     p_nome_formacao VARCHAR,
@@ -351,14 +406,6 @@ BEGIN
     );
 END;
 $$;
-
-
-
-
-
-
-
-
 
 
 
