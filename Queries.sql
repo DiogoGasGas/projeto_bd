@@ -276,7 +276,7 @@ ORDER BY taxa_adesao DESC;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---20.funcionarios que moram em lisboa, trabalharam em 
+--20.funcionarios que moram em lisboa, trabalharam na empresa MAarques
 
 
 
