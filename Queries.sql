@@ -1,36 +1,18 @@
-ufer-- 1. Total da remuneração de cada funcionário
-
--- Objetivo: somar todas as remunerações (salário + benefícios) de cada funcionário
-SELECT
-  f.id_fun, f.primeiro_nome, f.ultimo_nome,                       -- nome do funcionário
-  SUM(r.valor) AS total_remuneracao  -- soma de todas as remunerações associadas ao funcionário
-FROM Funcionarios f
--- junta Funcionarios com Remuneracoes para obter os valores associados a cada funcionário
-JOIN Remuneracoes r ON f.id_funcionario = r.id_funcionario
--- agrupa por funcionário para que a soma seja calculada individualmente por cada um
-GROUP BY f.id_funcionario;
-
-
-SELECT f.id_fun, f.primeiro_nome, f.ultimo_nome, (r.sum(valor) + r.salario_liquido) 
-from funcionarios f, renumeracoes r
-
-
-FODASE
 -----------------------------------------------------------------------
 
---2. Número de funcionários por departamento
+--2. Número de funcionários por departamento (vista)
 
 -- Objetivo: contar quantos funcionários existem em cada departamento
 SELECT
-  d.nome_departamento,              -- nome do departamento
-  COUNT(f.id_funcionario) AS total_funcionarios -- número total de funcionários no departamento
-FROM Departamentos d
+  d.nome,              -- nome do departamento
+  COUNT(f.id_fun) AS total_funcionarios -- número total de funcionários no departamento
+FROM departamentos AS d
 -- LEFT JOIN permite listar também departamentos sem funcionários
-LEFT JOIN Funcionarios f ON d.id_departamento = f.id_departamento
+LEFT JOIN funcionarios AS f 
+ON d.id_depart= f.id_depart
 -- agrupa os resultados por departamento para fazer a contagem corretamente
-GROUP BY d.id_departamento;
+GROUP BY d.id_depart;
 
-Fodase
 -------------------------------------------------------------------------
 
 --3 Funcionários que ganham acima da média geral
@@ -108,19 +90,20 @@ ORDER BY f.num_aderentes DESC;
 
 -----------------------------------------------------------------------------
 
---8. Funcionários com benefícios acima da média
+-- 8. funcionários com benificio do tipo 'Seguro Saúde' com valor deste acima da média (vista)
 
--- Objetivo: listar funcionários que recebem benefícios acima da média geral
-SELECT
-  f.nome,                        -- nome do funcionário
-  SUM(r.valor) AS total_beneficio -- total de benefícios recebidos
-FROM Funcionarios f
-JOIN Remuneracoes r ON f.id_funcionario = r.id_funcionario
--- filtra apenas remunerações do tipo Benefício
-WHERE r.tipo = 'Benefício'
-GROUP BY f.id_funcionario
--- HAVING compara a soma dos benefícios de cada funcionário com a média global dos benefícios
-HAVING total_beneficio > (SELECT AVG(valor) FROM Remuneracoes WHERE tipo = 'Benefício');
+SELECT 
+f.id_fun,
+f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
+SUM(b.valor) AS tot_benef
+
+FROM funcionarios AS f
+JOIN beneficios AS b 
+ON f.id_fun = b.id_fun
+WHERE b.tipo = 'Seguro Saúde'
+GROUP BY nome_completo, f.id_fun
+HAVING SUM(b.valor) > (select AVG(valor) from beneficios where tipo = 'Seguro Saúde')
+ORDER BY f.id_fun ASC;
 
 
 ---------------------------------------------------------------------------------
