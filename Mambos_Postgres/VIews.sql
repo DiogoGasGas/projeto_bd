@@ -79,3 +79,17 @@ SELECT
 
 
 select view * from vw_funcionarios_departamentos;
+-- Obtém se os funcionários que a sua remuneração total
+CREATE OR REPLACE VIEW vw_remun_completa AS
+SELECT 
+  f.id_fun,
+  f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
+  (salario_liquido)+ COALESCE(sum(b.valor),0) as remun_completa
+
+FROM funcionarios As f 
+LEFT JOIN salario AS s 
+ON f.id_fun = s.id_fun
+LEFT JOIN beneficios as b
+ON f.id_fun = b.id_fun
+GROUP BY f.id_fun, nome_completo, salario_liquido
+ORDER By f.id_fun ASC;
