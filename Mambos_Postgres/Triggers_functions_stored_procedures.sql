@@ -35,34 +35,45 @@ $$ LANGUAGE plpgsql;
 
 
 
+SET search_path TO bd054_schema, public;
 
-
-
-
-
-
+SET search_path TO bd054_schema, public;
 
 CREATE OR REPLACE FUNCTION calc_salario_liquido()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_descontos NUMERIC;
+    v_salario_liquido NUMERIC;
 BEGIN
-    -- Calcula o salário líquido automaticamente
-    NEW.salario_liquido := NEW.salario_bruto - descontos(NEW.salario_bruto);
+    -- Chama a função que calcula os descontos
+    v_descontos := descontos(NEW.salario_bruto);
+
+    -- Calcula o salário líquido
+    v_salario_liquido := NEW.salario_bruto - v_descontos;
 
     -- Evita salário líquido negativo
-    IF NEW.salario_liquido < 0 THEN
-        RAISE EXCEPTION 'O salário líquido não pode ser negativo: bruto=% descontos=%', 
-            NEW.salario_bruto, NEW.descontos;
+    IF v_salario_liquido < 0 THEN
+        RAISE EXCEPTION 
+            'O salário líquido não pode ser negativo: bruto=%, descontos=%', 
+            NEW.salario_bruto, v_descontos;
     END IF;
+
+    -- Atualiza o campo da nova linha
+    NEW.salario_liquido := v_salario_liquido;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger associado
+DROP TRIGGER IF EXISTS trg_calc_salario_liquido ON salario;
+
 CREATE TRIGGER trg_calc_salario_liquido
 BEFORE INSERT OR UPDATE ON salario
 FOR EACH ROW
 EXECUTE FUNCTION calc_salario_liquido();
+
+
 
 
 
@@ -82,6 +93,11 @@ CREATE TRIGGER trg_registrar_mudanca_cargo
 AFTER UPDATE ON funcionarios
 FOR EACH ROW
 EXECUTE FUNCTION registrar_mudanca_cargo();
+
+
+
+
+
 
 
 
