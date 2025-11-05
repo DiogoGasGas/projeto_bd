@@ -33,3 +33,9 @@ drop function if exists descontos(decimal);
 
 -- 4) Views
 DROP VIEW IF EXISTS vw_funcionarios_departamentos;  
+DROP VIEW IF EXISTS vw_ferias_aprovadas;
+DROP VIEW IF EXISTS vw_media_salarial_departamento;
+DROP VIEW IF EXISTS vw_formacoes_funcionarios;
+drop view if EXISTS vw_vagas_candidatos;
+DROP VIEW IF EXISTS vw_estatisticas_gerais;
+DROP VIEW IF EXISTS vw_remun_completa;

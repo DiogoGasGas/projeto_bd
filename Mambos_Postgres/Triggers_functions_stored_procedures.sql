@@ -207,16 +207,17 @@ EXECUTE FUNCTION trg_calcular_num_dias_ferias();
 
 
 
+
+
+
+
+
 -- functions
-
-
-
-
 
 SET search_path TO bd054_schema, public;
 
-CREATE OR REPLACE FUNCTION trg_calc_num_dias_permitidos()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION calcular_total_dias_permitidos(p_id_fun INT)
+RETURNS INT AS $$
 DECLARE
     v_data_entrada DATE;
     v_meses_trabalhados INT;
@@ -227,42 +228,35 @@ BEGIN
     SELECT MAX(data_inicio)
     INTO v_data_entrada
     FROM historico_empresas
-    WHERE id_fun = NEW.id_fun;
+    WHERE id_fun = p_id_fun;
 
     IF v_data_entrada IS NULL THEN
-        RAISE EXCEPTION 'Funcionário % não tem histórico de entrada', NEW.id_fun;
+        RAISE EXCEPTION 'Funcionário % não tem histórico de entrada.', p_id_fun;
     END IF;
 
-    -- Calcular meses trabalhados
-    v_meses_trabalhados := (DATE_PART('year', CURRENT_DATE) - DATE_PART('year', v_data_entrada)) * 12
-                         + (DATE_PART('month', CURRENT_DATE) - DATE_PART('month', v_data_entrada));
+    -- Calcular meses trabalhados desde a data de entrada
+    v_meses_trabalhados := 
+        (DATE_PART('year', CURRENT_DATE) - DATE_PART('year', v_data_entrada)) * 12
+        + (DATE_PART('month', CURRENT_DATE) - DATE_PART('month', v_data_entrada));
 
-    -- Dias de férias já tirados
-    SELECT COALESCE(SUM(num_dias), 0)
+    -- Calcular total de dias de férias já tirados (apenas os aprovados)
+    SELECT COALESCE(SUM(data_fim - data_inicio + 1), 0)
     INTO v_dias_tirados
     FROM ferias
-    WHERE id_fun = NEW.id_fun
+    WHERE id_fun = p_id_fun
       AND estado_aprov = 'Aprovado';
 
-    -- Calcular total de dias permitidos
+    -- Cada mês trabalhado dá direito a 2 dias de férias
     v_total_dias_permitidos := v_meses_trabalhados * 2 - v_dias_tirados;
 
+    -- Garante que não dá negativo
     IF v_total_dias_permitidos < 0 THEN
         v_total_dias_permitidos := 0;
     END IF;
 
-    -- Atribuir o valor ao novo registo
-    NEW.num_dias_permitidos := v_total_dias_permitidos;
-
-    RETURN NEW;
+    RETURN v_total_dias_permitidos;
 END;
 $$ LANGUAGE plpgsql;
-
--- Trigger associado
-CREATE TRIGGER trg_calc_num_dias_permitidos
-BEFORE INSERT OR UPDATE ON ferias
-FOR EACH ROW
-EXECUTE FUNCTION trg_calc_num_dias_permitidos();
 
 
 

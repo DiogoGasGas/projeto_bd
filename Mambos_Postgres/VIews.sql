@@ -3,7 +3,6 @@
 -- faz uma tabela virtual com os atributos (id do fun, nome completo, nome do departamento, cargo e total de funcionarios no departamento)
 
 
-select view * from vw_funcionarios_departamentos;
 -- Obtém se os funcionários que a sua remuneração total
 CREATE OR REPLACE VIEW vw_remun_completa AS
 SELECT 
@@ -48,7 +47,7 @@ JOIN salario s ON f.id_fun = s.id_fun;
 SET search_path TO bd054_schema, public;
 create or replace view ferias_aprovadas as
 select f.id_fun, f.primeiro_nome || ' ' || f.ultimo_nome as nome_funcionario,
-       fe.data_inicio, fe.data_fim, calcular_num_dias_ferias(fe.id_fun, fe.data_inicio, fe.data_fim) as num_dias_ferias
+       fe.data_inicio, fe.data_fim, fe.num_dias as num_dias_ferias
 from funcionarios f
 join ferias fe on f.id_fun = fe.id_fun
 where fe.estado_aprov = 'Aprovado';
