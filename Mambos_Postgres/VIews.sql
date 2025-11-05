@@ -89,6 +89,8 @@ JOIN formacoes fo ON fa.id_for = fo.id_for;
 
 
 
+
+
 set search_path to bd054_schema, public;
 CREATE OR REPLACE VIEW vw_vagas_candidatos AS
 SELECT 
@@ -98,6 +100,7 @@ SELECT
 FROM vagas v
 LEFT JOIN candidato_a c ON v.id_vaga = c.id_vaga
 GROUP BY v.id_vaga, v.estado;
+
 
 
 set search_path to bd054_schema, public;

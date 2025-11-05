@@ -232,21 +232,41 @@ $$ LANGUAGE plpgsql;
 
 
 
+SET search_path TO bd054_schema, public;
 
 CREATE OR REPLACE FUNCTION calcular_num_dias_ferias(p_id_fun INT, data_inicio DATE, data_fim DATE)
 RETURNS INT AS $$
 DECLARE
     v_num_dias_ferias INT;
+    v_estado_aprov VARCHAR;
 BEGIN
-    IF data_fim < data_inicio THEN
-    RAISE EXCEPTION 'Data de fim (%) não pode ser anterior à data de início (%)', data_fim, data_inicio;
-END IF;
+    -- 1️ Buscar o estado da solicitação de férias
+    SELECT estado_aprov
+    INTO v_estado_aprov
+    FROM ferias
+    WHERE id_fun = p_id_fun
+      AND data_inicio = calcular_num_dias_ferias.data_inicio
+      AND data_fim = calcular_num_dias_ferias.data_fim;
 
-    v_num_dias_ferias := data_fim - data_inicio +1;
--- insere-se o +1 para contar o dia de início como dia de férias
+    -- 2️ Validar se existe registo e se está aprovado
+    IF v_estado_aprov IS NULL THEN
+        RAISE EXCEPTION 'Não existe pedido de férias para este funcionário e período.';
+    ELSIF v_estado_aprov <> 'Aprovado' THEN
+        RAISE EXCEPTION 'As férias do funcionário % ainda não estão aprovadas.', p_id_fun;
+    END IF;
+
+    -- 3️ Validar as datas
+    IF data_fim < data_inicio THEN
+        RAISE EXCEPTION 'Data de fim (%) não pode ser anterior à data de início (%)', data_fim, data_inicio;
+    END IF;
+
+    -- 4️ Calcular número de dias de férias (contando o dia de início)
+    v_num_dias_ferias := data_fim - data_inicio + 1;
+
     RETURN v_num_dias_ferias;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 
