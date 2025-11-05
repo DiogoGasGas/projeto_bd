@@ -29,3 +29,6 @@ DROP FUNCTION IF EXISTS bd054_schema.calcular_num_aderentes_formacao(INT);
 DROP FUNCTION IF EXISTS bd054_schema.calc_idade(DATE);
 DROP FUNCTION IF EXISTS bd054_schema.calcular_num_dias_ferias(INT, DATE, DATE);
 DROP FUNCTION IF EXISTS bd054_schema.calcular_total_dias_permitidos(INT);
+
+-- 4) Views
+DROP VIEW IF EXISTS vw_funcionarios_departamentos;  
