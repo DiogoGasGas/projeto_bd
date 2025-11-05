@@ -154,12 +154,38 @@ AFTER DELETE ON funcionarios
 FOR EACH ROW
 EXECUTE FUNCTION delete_permissoes();
 
+SET search_path TO bd054_schema, public;
+drop function if exists calcular_num_dias_ferias() cascade;
 
 
 
 
+SET search_path TO bd054_schema, public;
+
+-- Função do trigger
+CREATE OR REPLACE FUNCTION trg_calcular_num_dias_ferias()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Verifica se as datas são válidas
+    IF NEW.data_fim < NEW.data_inicio THEN
+        RAISE EXCEPTION 
+            'A data de fim (%) não pode ser anterior à data de início (%)',
+            NEW.data_fim, NEW.data_inicio;
+    END IF;
+
+    -- Calcula o número de dias de férias automaticamente
+    NEW.num_dias := NEW.data_fim - NEW.data_inicio + 1;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
+-- Trigger associado à tabela ferias
+CREATE TRIGGER trg_before_insert_update_ferias
+BEFORE INSERT OR UPDATE ON ferias
+FOR EACH ROW
+EXECUTE FUNCTION trg_calcular_num_dias_ferias();
 
 
 
@@ -186,89 +212,62 @@ EXECUTE FUNCTION delete_permissoes();
 
 
 
--- Trigger associado
 
+SET search_path TO bd054_schema, public;
 
-set search_path to bd054_schema, public;
-CREATE OR REPLACE FUNCTION calcular_total_dias_permitidos(p_id_fun INT)
-RETURNS INT AS $$
+CREATE OR REPLACE FUNCTION trg_calc_num_dias_permitidos()
+RETURNS TRIGGER AS $$
 DECLARE
     v_data_entrada DATE;
     v_meses_trabalhados INT;
     v_dias_tirados INT;
     v_total_dias_permitidos INT;
 BEGIN
-    -- Pega a ultima data de entrada que o funciona´rio já teve numa empresa que é a data de entrada nesta empresa
+    -- Obter a data de entrada mais recente do funcionário
     SELECT MAX(data_inicio)
     INTO v_data_entrada
     FROM historico_empresas
-    WHERE id_fun = p_id_fun;
+    WHERE id_fun = NEW.id_fun;
 
     IF v_data_entrada IS NULL THEN
-        RAISE EXCEPTION 'Funcionário % não tem histórico de entrada', p_id_fun;
+        RAISE EXCEPTION 'Funcionário % não tem histórico de entrada', NEW.id_fun;
     END IF;
 
-    -- Calcular meses trabalhados desde a data de entrada
+    -- Calcular meses trabalhados
     v_meses_trabalhados := (DATE_PART('year', CURRENT_DATE) - DATE_PART('year', v_data_entrada)) * 12
-                          + (DATE_PART('month', CURRENT_DATE) - DATE_PART('month', v_data_entrada));
+                         + (DATE_PART('month', CURRENT_DATE) - DATE_PART('month', v_data_entrada));
 
     -- Dias de férias já tirados
-    SELECT COALESCE(SUM(calcular_num_dias_ferias(id_fun, data_inicio, data_fim)), 0)
+    SELECT COALESCE(SUM(num_dias), 0)
     INTO v_dias_tirados
     FROM ferias
-    WHERE id_fun = p_id_fun
+    WHERE id_fun = NEW.id_fun
       AND estado_aprov = 'Aprovado';
 
-    -- Total de dias permitidos para o funcionário tirar
+    -- Calcular total de dias permitidos
     v_total_dias_permitidos := v_meses_trabalhados * 2 - v_dias_tirados;
 
     IF v_total_dias_permitidos < 0 THEN
         v_total_dias_permitidos := 0;
     END IF;
 
-    RETURN v_total_dias_permitidos;
+    -- Atribuir o valor ao novo registo
+    NEW.num_dias_permitidos := v_total_dias_permitidos;
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Trigger associado
+CREATE TRIGGER trg_calc_num_dias_permitidos
+BEFORE INSERT OR UPDATE ON ferias
+FOR EACH ROW
+EXECUTE FUNCTION trg_calc_num_dias_permitidos();
+
 
 
 
 SET search_path TO bd054_schema, public;
-
-CREATE OR REPLACE FUNCTION calcular_num_dias_ferias(p_id_fun INT, data_inicio DATE, data_fim DATE)
-RETURNS INT AS $$
-DECLARE
-    v_num_dias_ferias INT;
-    v_estado_aprov VARCHAR;
-BEGIN
-    -- 1️ Buscar o estado da solicitação de férias
-    SELECT estado_aprov
-    INTO v_estado_aprov
-    FROM ferias
-    WHERE id_fun = p_id_fun
-      AND data_inicio = calcular_num_dias_ferias.data_inicio
-      AND data_fim = calcular_num_dias_ferias.data_fim;
-
-    -- 2️ Validar se existe registo e se está aprovado
-    IF v_estado_aprov IS NULL THEN
-        RAISE EXCEPTION 'Não existe pedido de férias para este funcionário e período.';
-    ELSIF v_estado_aprov <> 'Aprovado' THEN
-        RAISE EXCEPTION 'As férias do funcionário % ainda não estão aprovadas.', p_id_fun;
-    END IF;
-
-    -- 3️ Validar as datas
-    IF data_fim < data_inicio THEN
-        RAISE EXCEPTION 'Data de fim (%) não pode ser anterior à data de início (%)', data_fim, data_inicio;
-    END IF;
-
-    -- 4️ Calcular número de dias de férias (contando o dia de início)
-    v_num_dias_ferias := data_fim - data_inicio + 1;
-
-    RETURN v_num_dias_ferias;
-END;
-$$ LANGUAGE plpgsql;
-
-
-
 
 
 set search_path to bd054_schema, public;
