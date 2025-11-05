@@ -57,7 +57,6 @@ CREATE TABLE salario (
     id_fun INT,
     data_inicio DATE,
     salario_bruto DECIMAL(10,2),
-    descontos DECIMAL(10,2),
     salario_liquido DECIMAL(10,2),
     PRIMARY KEY (id_fun, data_inicio),
     FOREIGN KEY (id_fun, data_inicio) REFERENCES remuneracoes(id_fun, data_inicio)
