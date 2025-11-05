@@ -280,4 +280,18 @@ ORDER BY taxa_adesao DESC;
 
 
 
-
+SELECT
+f.primeiro_nome || ' ' || f.ultimo_nome As nome_completo,
+h.nome_empresa,
+s.salario_bruto,
+b.tipo
+FROM funcionarios AS f
+JOIN historico_empresas AS h 
+    ON f.id_fun = h.id_fun
+    AND h.nome_empresa = 'Marques'
+JOIN salario As s 
+    ON f.id_fun = s.id_fun
+    AND s.salario_bruto > 1200
+JOIN beneficios AS b
+    ON f.id_fun = b.id_fun
+    AND b.tipo = 'Subsídio Transporte';
