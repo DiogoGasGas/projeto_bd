@@ -42,10 +42,8 @@ JOIN salario s ON f.id_fun = s.id_fun;
 
 
 
-
-
 SET search_path TO bd054_schema, public;
-create or replace view ferias_aprovadas as
+create or replace view vw_ferias_aprovadas as
 select f.id_fun, f.primeiro_nome || ' ' || f.ultimo_nome as nome_funcionario,
        fe.data_inicio, fe.data_fim, fe.num_dias as num_dias_ferias
 from funcionarios f
