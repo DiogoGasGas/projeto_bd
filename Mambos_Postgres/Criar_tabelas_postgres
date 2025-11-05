@@ -92,7 +92,6 @@ CREATE TABLE ferias (
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CHECK(data_fim > data_inicio),
-    CHECK(num_dias <= num_dias_permitidos),
     CHECK(estado_aprov IN ('Aprovado', 'Rejeitado', 'Por aprovar'))
 );
 
@@ -227,7 +226,7 @@ CREATE TABLE avaliacoes (
 CREATE TABLE utilizadores (
     id_fun INT,
     password VARCHAR(30) NOT NULL,
-    PRIMARY KEY (id_fun),
+    PRIMARY KEY (id_fun, password),
     FOREIGN KEY (id_fun) REFERENCES funcionarios(id_fun)
     ON DELETE CASCADE
     ON UPDATE CASCADE
