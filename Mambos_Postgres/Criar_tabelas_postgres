@@ -123,7 +123,6 @@ CREATE TABLE faltas (
 CREATE TABLE historico_empresas (
     id_fun INT,
     nome_empresa VARCHAR(50),
-    nome_departamento VARCHAR(50),
     cargo VARCHAR(100), 
     data_inicio DATE,
     data_fim DATE,
