@@ -154,16 +154,13 @@ AFTER DELETE ON funcionarios
 FOR EACH ROW
 EXECUTE FUNCTION delete_permissoes();
 
-SET search_path TO bd054_schema, public;
-drop function if exists calcular_num_dias_ferias() cascade;
-
 
 
 
 SET search_path TO bd054_schema, public;
 
 -- Função do trigger
-CREATE OR REPLACE FUNCTION trg_calcular_num_dias_ferias()
+CREATE OR REPLACE FUNCTION calcular_num_dias_ferias()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Verifica se as datas são válidas
@@ -182,10 +179,10 @@ $$ LANGUAGE plpgsql;
 
 
 -- Trigger associado à tabela ferias
-CREATE TRIGGER trg_before_insert_update_ferias
+CREATE TRIGGER trg_calcular_num_dias_ferias
 BEFORE INSERT OR UPDATE ON ferias
 FOR EACH ROW
-EXECUTE FUNCTION trg_calcular_num_dias_ferias();
+EXECUTE FUNCTION calcular_num_dias_ferias();
 
 
 
@@ -356,6 +353,13 @@ $$ LANGUAGE plpgsql;
 
 
     
+
+
+
+
+
+
+
 -- procedures
 
 
@@ -437,6 +441,8 @@ BEGIN
     VALUES (p_id_fun, p_id_av, p_data, p_avaliacao, p_criterios, p_autoavaliacao);
 END;
 $$;
+
+
 
 set search_path to bd054_schema, public;
 CREATE OR REPLACE PROCEDURE adicionar_funcionario_proc(
