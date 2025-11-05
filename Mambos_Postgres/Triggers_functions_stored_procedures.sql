@@ -309,7 +309,6 @@ $$ language plpgsql;
 
 
 
-
 set search_path to bd054_schema, public;
 create or replace function calcular_num_aderentes_formacao(p_id_for INT)
 returns INT as $$
@@ -318,12 +317,15 @@ declare
 begin
 
     select count(*) into v_num_aderentes_formacao
-    from formacoes
+    from teve_formacao
     where id_for = p_id_for;
 
     return v_num_aderentes_formacao;
 end;
 $$ language plpgsql;
+
+
+
 
 
 

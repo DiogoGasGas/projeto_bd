@@ -66,8 +66,6 @@ JOIN funcionarios f ON f.id_depart = d.id_depart
 JOIN salario s ON s.id_fun = f.id_fun
 GROUP BY d.id_depart, d.nome;
 
-SET search_path TO bd054_schema, public;
-select * from vw_formacoes_funcionarios;
 
 
 
@@ -88,6 +86,7 @@ SELECT
 FROM funcionarios f
 JOIN teve_formacao fa ON f.id_fun = fa.id_fun
 JOIN formacoes fo ON fa.id_for = fo.id_for;
+
 
 
 set search_path to bd054_schema, public;
