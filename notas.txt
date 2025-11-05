@@ -1,4 +1,4 @@
-Dependentes - data de nascimento dos pais precisa ter no mínimo 12 anos de diferença do filho, e filho 12 anos acima do pai
+Dependentes - data de nascimento dos pais precisa ser maior de diferença do filho, e vice versa
 Remuneracoes - data de inicio vem antes de data fim, data de inicio tem de acontecer antes da data atual
 Salario - acima do salario minimo
 Benificios - data de inicio antes da data atual
