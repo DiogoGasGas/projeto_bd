@@ -15,15 +15,19 @@ GROUP BY d.id_depart;
 
 -------------------------------------------------------------------------
 
---3 Funcionários que ganham acima da média geral
+--3 Funcionários que ganham acima da média geral (vista/por testar)
 
 -- Objetivo: listar funcionários cujo salário base é superior à média global de salários
 SELECT
-  nome,                 -- nome do funcionário
-  salario_base          -- salário base individual
-FROM Funcionarios
+  f.primeiro_nome || ' '|| f.ultimo_nome,                 -- nome do funcionário
+  s.salario_bruto         -- salário base individual
+FROM funcionarios AS f
+LEFT JOIN salario as s
 -- subquery calcula a média global de salário_base na tabela Funcionarios
-WHERE salario_base > (SELECT AVG(salario_base) FROM Funcionarios);
+WHERE salario_bruto > (
+  SELECT 
+  AVG(salario_bruto) 
+  FROM salarios);
 
 
 --------------------------------------------------------------------------
@@ -32,12 +36,15 @@ WHERE salario_base > (SELECT AVG(salario_base) FROM Funcionarios);
 
 -- Objetivo: identificar os departamentos com a maior soma de remunerações por ordem decrescente
 SELECT
-  d.nome_departamento
-FROM Departamentos d
+  d.nome
+  SUM(
+FROM departamentos AS d
 -- junta Departamentos com Funcionarios para obter quem trabalha em cada departamento
-JOIN Funcionarios f ON d.id_departamento = f.id_departamento
+JOIN funcionarios AS f 
+  ON d.id_depart = f.id_depart
 -- junta Funcionarios com Remuneracoes para obter os valores associados
-JOIN Remuneracoes r ON f.id_funcionario = r.id_funcionario
+JOIN remuneracoes r 
+  ON f.id_funcionario = r.id_funcionario
 -- agrupa os valores por departamento
 GROUP BY d.id_departamento
 -- ordena pela soma das remunerações de forma decrescente (maior para menor)
