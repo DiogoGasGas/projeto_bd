@@ -292,3 +292,40 @@ JOIN salario As s
 JOIN beneficios AS b
     ON f.id_fun = b.id_fun 
     AND b.tipo = 'Seguro Saúde';
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- 21.Listar os funcionários que ganham acima da média salarial do seu próprio departamento, indicando-o, mostrando também o número de formações concluídas.
+
+
+SELECT 
+f.id_fun,
+f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
+sal.salario_bruto,
+d.nome,
+
+(SELECT COUNT(*)
+FROM teve_formacao as teve
+JOIN formacoes as fo
+ON teve.id_for = fo.id_for
+AND (f.id_fun = teve.id_fun)
+) As num_formacoes
+
+FROM funcionarios AS f 
+JOIN departamentos AS d
+    ON f.id_depart = d.id_depart
+JOIN salario as Sal 
+    ON f.id_fun = sal.id_fun
+    AND sal.salario_bruto > (                  
+        SELECT AVG(s2.salario_bruto)          
+        FROM funcionarios AS f2               
+        JOIN salario AS s2 
+            ON f2.id_fun = s2.id_fun
+        WHERE f2.id_depart = f.id_depart);
+
+
+-- nesta subquerry vamos filtrar os funcionários por departamento e daí calcular a média salarial por departamento
+-- para depois comparar com o salário bruto do funcionário em questão
+-- ou seja, para cada funcionário, vamos calcular a média salarial do departamento a que ele pertence
+-- e verificar se o salário bruto dele é maior que essa 
+-- daí ser necessário atribuir novas variaveis a funcionários e salários
+-- uma vez que temos já funcionários e salários na query principal
