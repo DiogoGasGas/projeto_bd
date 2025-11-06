@@ -208,28 +208,32 @@ EXECUTE FUNCTION delete_permissoes();
 
 
 
--- Trigger que valida a coerência das datas entre pais e dependentes
+-- Função trigger que valida se a data de nascimento do funcionário responsável
+-- é anterior à do seu dependente (ou seja, o funcionário deve ser mais velho)
 CREATE OR REPLACE FUNCTION validar_datas_dependentes()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_data_pai DATE;  -- Guarda a data de nascimento do pai/mãe
+    v_data_funcionario DATE;  -- Variável para guardar a data de nascimento do funcionário
 BEGIN
-    -- Obtém a data de nascimento do pai/mãe a partir da tabela 'funcionarios'
-    SELECT data_nascimento INTO v_data_pai
+    -- Obtém a data de nascimento do funcionário (responsável) a partir da tabela 'funcionarios'
+    SELECT data_nascimento INTO v_data_funcionario
     FROM funcionarios
-    WHERE id_fun = NEW.id_pai;
+    WHERE id_fun = NEW.id_fun;
 
-    -- Verifica se o pai/mãe é mais novo ou tem a mesma idade que o dependente
-    IF v_data_pai >= NEW.data_nascimento THEN
+    -- Verifica se o funcionário é mais novo (ou da mesma idade) que o dependente
+    IF v_data_funcionario >= NEW.data_nascimento THEN
         RAISE EXCEPTION 
-            'O pai/mãe não pode ser mais novo que o dependente (ID %)', NEW.id_pai;
+            'O funcionário (ID %) não pode ser mais novo que o dependente.', NEW.id_fun;
     END IF;
 
+    -- Se tudo estiver correto, permite a inserção/atualização
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger associado
+-- Trigger associado à tabela 'dependentes'
+-- É executado antes de cada inserção ou atualização,
+-- para garantir que a relação de idade é coerente
 CREATE TRIGGER trg_validar_datas_dependentes
 BEFORE INSERT OR UPDATE ON dependentes
 FOR EACH ROW
@@ -238,12 +242,13 @@ EXECUTE FUNCTION validar_datas_dependentes();
 
 
 
+
 -- Trigger que valida as datas de início e fim na tabela 'remuneracoes'
 CREATE OR REPLACE FUNCTION validar_datas_remuneracoes()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Verifica se a data de início vem antes da data de fim
-    IF NEW.data_inicio >= NEW.data_fim THEN
+    -- Verifica se a data de fim foi fornecida antes de comparar
+    IF NEW.data_fim IS NOT NULL AND NEW.data_inicio >= NEW.data_fim THEN
         RAISE EXCEPTION 
             'A data de início (%) deve ser anterior à data de fim (%)',
             NEW.data_inicio, NEW.data_fim;
@@ -258,12 +263,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
--- Trigger associado
-CREATE TRIGGER trg_validar_datas_remuneracoes
-BEFORE INSERT OR UPDATE ON remuneracoes
-FOR EACH ROW
-EXECUTE FUNCTION validar_datas_remuneracoes();
 
 
 
