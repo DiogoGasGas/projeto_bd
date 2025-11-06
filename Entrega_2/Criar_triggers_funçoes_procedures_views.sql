@@ -208,31 +208,35 @@ EXECUTE FUNCTION delete_permissoes();
 
 
 
--- Função trigger que valida se a data de nascimento do funcionário responsável
--- é anterior à do seu dependente (ou seja, o funcionário deve ser mais velho)
--- Trigger que valida que o dependente "Filho(a)" nasceu depois do funcionário
+-- Trigger que valida a coerência de datas entre funcionário e dependente
 CREATE OR REPLACE FUNCTION validar_datas_dependentes()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_data_funcionario DATE;  -- Data de nascimento do funcionário (pai/mãe)
+    v_data_funcionario DATE;  -- Data de nascimento do funcionário
 BEGIN
-    -- Só executa se o parentesco for "Filho(a)"
+    -- Busca a data de nascimento do funcionário
+    SELECT data_nascimento INTO v_data_funcionario
+    FROM funcionarios
+    WHERE id_fun = NEW.id_fun;
+
+    -- Se o funcionário não existir, lança erro
+    IF v_data_funcionario IS NULL THEN
+        RAISE EXCEPTION 'Funcionário com ID % não encontrado.', NEW.id_fun;
+    END IF;
+
+    -- Caso o dependente seja um filho(a)
     IF NEW.parentesco = 'Filho(a)' THEN
-        
-        -- Busca a data de nascimento do funcionário associado
-        SELECT data_nascimento INTO v_data_funcionario
-        FROM funcionarios
-        WHERE id_fun = NEW.id_fun;
-
-        -- Caso não exista funcionário correspondente
-        IF v_data_funcionario IS NULL THEN
-            RAISE EXCEPTION 'Funcionário com ID % não encontrado.', NEW.id_fun;
-        END IF;
-
-        -- Garante que o dependente (filho) nasceu depois do funcionário
         IF NEW.data_nascimento <= v_data_funcionario THEN
             RAISE EXCEPTION 
                 'O dependente (Filho(a)) deve nascer após o funcionário (ID %).', NEW.id_fun;
+        END IF;
+    END IF;
+
+    -- Caso o dependente seja pai/mãe
+    IF NEW.parentesco = 'Pai/Mãe' THEN
+        IF NEW.data_nascimento >= v_data_funcionario THEN
+            RAISE EXCEPTION 
+                'O dependente (Pai/Mãe) deve ser mais velho que o funcionário (ID %).', NEW.id_fun;
         END IF;
     END IF;
 
@@ -240,11 +244,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger associado à tabela 'dependentes'
+-- Trigger associado à tabela dependentes
 CREATE TRIGGER trg_validar_datas_dependentes
 BEFORE INSERT OR UPDATE ON dependentes
 FOR EACH ROW
 EXECUTE FUNCTION validar_datas_dependentes();
+
 
 
 
