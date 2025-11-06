@@ -335,41 +335,47 @@ $$ LANGUAGE plpgsql;
 
 
 
---num aderentes / formacao
-
-
-
-set search_path to bd054_schema, public;
-create or replace function calcular_num_aderentes_formacao(p_id_for INT)
-returns INT as $$
-declare
-    v_num_aderentes_formacao INT;
-begin
-
-    select count(*) into v_num_aderentes_formacao
-    from teve_formacao
-    where id_for = p_id_for;
-
-    return v_num_aderentes_formacao;
-end;
-$$ language plpgsql;
 
 
 
 
 
+-- Função que calcula o número de funcionários que aderiram a uma formação
+CREATE OR REPLACE FUNCTION calcular_num_aderentes_formacao(p_id_for INT)
+RETURNS INT AS $$
+DECLARE
+    v_num_aderentes_formacao INT;  -- Guarda o total de aderentes
+BEGIN
+    -- Conta quantos funcionários participaram na formação indicada
+    SELECT COUNT(*) INTO v_num_aderentes_formacao
+    FROM teve_formacao
+    WHERE id_for = p_id_for;
+
+    -- Retorna o total calculado
+    RETURN v_num_aderentes_formacao;
+END;
+$$ LANGUAGE plpgsql;
 
 
 
+
+
+
+
+-- Função que calcula a idade de uma pessoa com base na data de nascimento
 CREATE OR REPLACE FUNCTION calc_idade(data_nascimento DATE)
 RETURNS INT AS $$
 DECLARE
-    idade INT;
+    idade INT;  -- Guarda o valor da idade calculada
 BEGIN
+    -- Calcula a diferença em anos entre a data atual e a data de nascimento
     idade := DATE_PART('year', AGE(CURRENT_DATE, data_nascimento));
+
+    -- Retorna a idade
     RETURN idade;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
     
@@ -382,31 +388,37 @@ $$ LANGUAGE plpgsql;
 
 -- procedures
 
-
+-- Procedimento armazenado que aprova um pedido de férias específico
 CREATE OR REPLACE PROCEDURE aprovar_ferias_proc(p_id_fun INT, p_data_inicio DATE)
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Atualiza o estado das férias para 'Aprovado'
     UPDATE ferias
     SET estado_aprov = 'Aprovado'
     WHERE id_fun = p_id_fun AND data_inicio = p_data_inicio;
 
+    -- Caso não exista um registo correspondente, lança uma exceção
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Férias não encontradas para o funcionário % na data %', p_id_fun, p_data_inicio;
+        RAISE EXCEPTION 
+            'Férias não encontradas para o funcionário % na data %', 
+            p_id_fun, p_data_inicio;
     END IF;
 END;
 $$;
 
 
 
+-- Procedimento armazenado que adiciona uma nova candidatura a uma vaga
 CREATE OR REPLACE PROCEDURE adicionar_candidatura_proc(
-    p_id_cand INT, 
-    p_id_vaga INT, 
-    p_id_recrutador INT DEFAULT NULL
+    p_id_cand INT,          -- ID do candidato
+    p_id_vaga INT,          -- ID da vaga
+    p_id_recrutador INT DEFAULT NULL  -- ID opcional do recrutador
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Insere uma nova candidatura na tabela 'candidato_a'
     INSERT INTO candidato_a(id_cand, id_vaga, id_recrutador)
     VALUES (p_id_cand, p_id_vaga, p_id_recrutador);
 END;
@@ -414,49 +426,58 @@ $$;
 
 
 
+--  Procedimento que adiciona uma nova formação
 CREATE OR REPLACE PROCEDURE adicionar_uma_formacao(
-    p_id_for INT,
-    p_nome_formacao VARCHAR,
-    p_descricao_formacao VARCHAR,
-    p_data_inicio DATE,
-    p_data_fim DATE,
-    p_estado VARCHAR)
+    p_id_for INT,                   -- ID da formação
+    p_nome_formacao VARCHAR,        -- Nome da formação
+    p_descricao_formacao VARCHAR,   -- Descrição da formação
+    p_data_inicio DATE,             -- Data de início
+    p_data_fim DATE,                -- Data de fim
+    p_estado VARCHAR                -- Estado da formação
+)
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Verifica se o estado é válido
     IF p_estado NOT IN ('Planeada', 'Em curso', 'Concluida', 'Cancelada') THEN
         RAISE EXCEPTION 'Estado inválido: %', p_estado;
     END IF;
 
-    -- Validação das datas
+    -- Valida se a data de fim é posterior à data de início
     IF p_data_fim IS NOT NULL AND p_data_fim <= p_data_inicio THEN
         RAISE EXCEPTION 'Data de fim (%) deve ser maior que data de início (%)', p_data_fim, p_data_inicio;
     END IF;
+
+    -- Insere a formação na tabela
     INSERT INTO formacoes(id_for, nome_formacao, descricao_formacao, data_inicio, data_fim, estado)
     VALUES (p_id_for, p_nome_formacao, p_descricao_formacao, p_data_inicio, p_data_fim, p_estado);
 END;
 $$;
 
 
+
+
+
+
+
+--  Procedimento que adiciona uma nova avaliação de funcionário
 CREATE OR REPLACE PROCEDURE adicionar_avaliacao(
-    p_id_fun INT,
-    p_id_av INT,
-    p_data DATE,
-    p_avaliacao BYTEA,
-    p_criterios VARCHAR,
-    p_autoavaliacao varchar 
+    p_id_fun INT,          -- ID do funcionário
+    p_id_av INT,           -- ID da avaliação
+    p_data DATE,           -- Data da avaliação
+    p_avaliacao BYTEA,     -- Documento da avaliação
+    p_criterios VARCHAR,   -- Critérios usados
+    p_autoavaliacao VARCHAR -- Autoavaliação do funcionário
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM funcionarios WHERE id_fun = p_id_fun) THEN
-    RAISE EXCEPTION 'O funcionário com id_fun % já existe', p_id_fun;
-    END IF;
-    IF data IS NOT NULL and data > CURRENT_DATE THEN
+    -- Valida se a data não é futura
+    IF p_data IS NOT NULL AND p_data > CURRENT_DATE THEN
         RAISE EXCEPTION 'A data da avaliação (%) não pode ser no futuro', p_data;
     END IF;
 
-
+    -- Insere a nova avaliação na tabela
     INSERT INTO avaliacoes(id_fun, id_av, data, avaliacao, criterios, autoavaliacao)
     VALUES (p_id_fun, p_id_av, p_data, p_avaliacao, p_criterios, p_autoavaliacao);
 END;
@@ -464,23 +485,27 @@ $$;
 
 
 
-set search_path to bd054_schema, public;
+
+
+
+--  Procedimento que adiciona um novo funcionário
 CREATE OR REPLACE PROCEDURE adicionar_funcionario_proc(
-    p_nif VARCHAR,
-    p_primeiro_nome VARCHAR,
-    p_ultimo_nome VARCHAR,
-    p_nome_rua VARCHAR,
-    p_nome_localidade VARCHAR,
-    p_codigo_postal VARCHAR,
-    p_num_telemovel VARCHAR,
-    p_email VARCHAR,
-    p_data_nascimento DATE,
-    p_cargo VARCHAR,
-    p_id_depart INT
+    p_nif VARCHAR,              -- NIF do funcionário
+    p_primeiro_nome VARCHAR,    -- Primeiro nome
+    p_ultimo_nome VARCHAR,      -- Último nome
+    p_nome_rua VARCHAR,         -- Rua
+    p_nome_localidade VARCHAR,  -- Localidade
+    p_codigo_postal VARCHAR,    -- Código postal
+    p_num_telemovel VARCHAR,    -- Telemóvel
+    p_email VARCHAR,            -- Email
+    p_data_nascimento DATE,     -- Data de nascimento
+    p_cargo VARCHAR,            -- Cargo
+    p_id_depart INT             -- ID do departamento
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    -- Insere um novo funcionário na tabela
     INSERT INTO funcionarios(
         nif, primeiro_nome, ultimo_nome, nome_rua, nome_localidade,
         codigo_postal, num_telemovel, email, data_nascimento, cargo, id_depart
