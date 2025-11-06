@@ -236,6 +236,7 @@ CREATE TABLE avaliacoes (
     id_avaliador INT,
     data DATE,
     avaliacao BYTEA,
+    avaliacao_numerica INT,
     criterios VARCHAR(500),
     autoavaliacao VARCHAR(500),
     PRIMARY KEY (id_fun, id_avaliador, data),
