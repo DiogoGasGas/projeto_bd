@@ -7,6 +7,34 @@ set search_path to bd054_schema, public;
 
 
 
+
+-- Trigger que calcula o numero o numero de dias de ferias automaticamente
+-- Tem que ser rodado antes do trigger de validar dias de ferias
+CREATE OR REPLACE FUNCTION calcular_num_dias_ferias()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Verifica se as datas são válidas
+    IF NEW.data_fim < NEW.data_inicio THEN
+        RAISE EXCEPTION 
+            'A data de fim (%) não pode ser anterior à data de início (%)',
+            NEW.data_fim, NEW.data_inicio;
+    END IF;
+
+    -- Calcula o número de dias de férias automaticamente
+    NEW.num_dias := NEW.data_fim - NEW.data_inicio + 1;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger associado 
+CREATE TRIGGER trg_calcular_num_dias_ferias
+BEFORE INSERT OR UPDATE ON ferias
+FOR EACH ROW
+EXECUTE FUNCTION calcular_num_dias_ferias();
+
+
+
 --- trigger para validar dias de ferias
 set search_path TO bd054_schema, public;
 CREATE OR REPLACE FUNCTION validar_dias_ferias()
@@ -178,35 +206,6 @@ EXECUTE FUNCTION delete_permissoes();
 
 
 
--- Trigger que calcula o numero o numero de dias de ferias automaticamente
-
-CREATE OR REPLACE FUNCTION calcular_num_dias_ferias()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Verifica se as datas são válidas
-    IF NEW.data_fim < NEW.data_inicio THEN
-        RAISE EXCEPTION 
-            'A data de fim (%) não pode ser anterior à data de início (%)',
-            NEW.data_fim, NEW.data_inicio;
-    END IF;
-
-    -- Calcula o número de dias de férias automaticamente
-    NEW.num_dias := NEW.data_fim - NEW.data_inicio + 1;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger associado 
-CREATE TRIGGER trg_calcular_num_dias_ferias
-BEFORE INSERT OR UPDATE ON ferias
-FOR EACH ROW
-EXECUTE FUNCTION calcular_num_dias_ferias();
-
-
-
-
-
 
 
 -- Trigger que valida a coerência das datas entre pais e dependentes
@@ -298,7 +297,7 @@ BEGIN
         RAISE EXCEPTION 'Funcionário % não tem histórico de entrada.', p_id_fun;
     END IF;
 
-    -- Calcular meses trabalhados desde a data de entrada
+    -- Calcular meses trabalhados desde a data de entrada, assumindo meses complestos em vez dos 22 dias.
     v_meses_trabalhados := 
         (DATE_PART('year', CURRENT_DATE) - DATE_PART('year', v_data_entrada)) * 12
         + (DATE_PART('month', CURRENT_DATE) - DATE_PART('month', v_data_entrada));
@@ -553,6 +552,10 @@ CREATE OR REPLACE PROCEDURE adicionar_funcionario_proc(
 LANGUAGE plpgsql
 AS $$
 BEGIN
+    IF EXISTS (SELECT 1 FROM funcionarios WHERE nif = p_nif) THEN
+    RAISE EXCEPTION 'Já existe um funcionário com o NIF %', p_nif;
+    END IF;
+
     -- Insere um novo funcionário na tabela
     INSERT INTO funcionarios(
         nif, primeiro_nome, ultimo_nome, nome_rua, nome_localidade,
