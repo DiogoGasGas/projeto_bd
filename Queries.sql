@@ -32,7 +32,7 @@ WHERE salario_bruto > (
 
 --------------------------------------------------------------------------
 
---3. Departamento com maior remuneração total (vista por testar)
+--3. Departamentos e as suas remunerações (vista por testar)
 
 -- Objetivo: identificar os departamentos com a maior soma de remunerações por ordem decrescente
 SELECT
@@ -169,10 +169,11 @@ SELECT
   dep.nome_departamento,                        -- departamento
   COUNT(v.id_vaga) AS num_vagas,                -- quantas vagas existem no departamento
   AVG(v.num_candidatos) AS media_candidatos     -- média de candidatos por vaga nesse departamento
-FROM Vagas v
+FROM vagas AS v
 -- assume-se que Vagas tem uma FK id_departamento (relação 'tem' com Departamentos)
-JOIN Departamentos dep ON v.id_departamento = dep.id_departamento
-GROUP BY dep.id_departamento
+JOIN departamentos AS dep
+  ON v.id_depart = dep.id_depart
+GROUP BY dep.id_depart  
 -- ordena para ver primeiro os departamentos com maior média de candidatos
 ORDER BY media_candidatos DESC;
 
@@ -202,7 +203,7 @@ WHERE av.autoavaliacao IS NULL;
 
 ------------------------------------------------------------------------------------
 
---14. Numero de faltas por departamento
+--14. Numero de faltas por departamento e (justificacao mais comum (adicionar))
 SELECT 
     d.id_depart,
     d.nome,
@@ -338,12 +339,12 @@ COUNT(d.sexo) AS num_dep_Fem
 
 FROM funcionarios AS f 
 LEFT JOIN salario AS s 
-ON f.id_fun = s.id_fun 
+  ON f.id_fun = s.id_fun 
 AND s.salario_liquido > 1500
 JOIN ferias as fe 
-ON f.id_fun = fe.id_fun
+  ON f.id_fun = fe.id_fun
 JOIN dependentes AS d 
-ON f.id_fun = d.id_fun 
+  ON f.id_fun = d.id_fun 
 WHERE  d.sexo = 'Feminino'
 GROUP BY nome_completo, s.salario_liquido;
 -- uma vez que temos já funcionários e salários na query principal
