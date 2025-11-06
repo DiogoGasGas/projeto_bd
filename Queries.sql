@@ -15,87 +15,92 @@ GROUP BY d.id_depart;
 
 -------------------------------------------------------------------------
 
---2 Funcionários que ganham acima da média geral (vista/por testar)
+--2 Funcionários que ganham acima da média geral (vista)
 
--- Objetivo: listar funcionários cujo salário base é superior à média global de salários
 SELECT
-  f.primeiro_nome || ' '|| f.ultimo_nome,                 -- nome do funcionário
-  s.salario_bruto         -- salário base individual
+  f.primeiro_nome || ' '|| f.ultimo_nome AS nome_completo,                 -- nome do funcionário
+  s.salario_bruto         -- salário bruto individual
 FROM funcionarios AS f
-LEFT JOIN salario as s
+LEFT JOIN salario AS s
+ON s.id_fun = f.id_fun
 -- subquery calcula a média global de salário_base na tabela Funcionarios
-WHERE salario_bruto > (
+WHERE s.salario_bruto > (
   SELECT 
   AVG(salario_bruto) 
-  FROM salarios);
+  FROM salario);
 
 
 --------------------------------------------------------------------------
 
---3. Departamentos e as suas remunerações (vista por testar)
+--3. Departamentos e as suas remunerações (vista)
 
 -- Objetivo: identificar os departamentos com a maior soma de remunerações por ordem decrescente
 SELECT
-  d.nome
+  d.nome,
   SUM(s.salario_bruto) As tot_remun
 FROM departamentos AS d
--- junta Departamentos com Funcionarios para obter quem trabalha em cada departamento
+-- junta departamentos com funcionarios para obter quem trabalha em cada departamento
 JOIN funcionarios AS f 
   ON d.id_depart = f.id_depart
--- junta Funcionarios com Remuneracoes para obter os valores associados
-JOIN salarios AS s 
+-- associa funcionarios com remuneracoes para obter os valores associados
+JOIN salario AS s 
   ON f.id_fun = s.id_fun
--- agrupa os valores por departamento
+-- associar os valores por departamento
 GROUP BY d.nome
--- ordena pela soma das remunerações de forma decrescente (maior para menor)
+-- ordena pela soma das remunerações de forma decrescente 
 ORDER BY tot_remun DESC
 
 
 
 ------------------------------------------------------------------------------------
 
---4. Top 3 funcionários com maior total de remuneração
+--4. Top 3 funcionários com maior total de remuneração (vista)
 
--- Objetivo: listar os funcionários com maior remuneração total de forma decrescente
+-- Objetivo: listar os 3 funcionários com maior salário líquido de forma decrescente
 SELECT
-  f.nome,                        -- nome do funcionário
-  SUM(r.valor) AS total_remuneracao -- soma de todas as remunerações associadas ao funcionário
-FROM Funcionarios f
-JOIN Remuneracoes r ON f.id_funcionario = r.id_funcionario
-GROUP BY f.id_funcionario
+  f.primeiro_nome,                        -- nome do funcionário
+  SUM(s.salario_liquido) AS total_remuneracao -- soma de todas as remunerações associadas ao funcionário
+FROM funcionarios AS f
+JOIN salario AS s 
+ON f.id_fun = s.id_fun
+GROUP BY f.id_fun
 -- ordena os resultados do maior para o menor valor total
 ORDER BY total_remuneracao DESC
+--limita aos 3 primeiros valores a tabela
+LIMIT 3
 
 
 -------------------------------------------------------------------------------------
 
---5. Média de férias por departamento
+--5. Média de férias por departamento (vista) 
 
 -- Objetivo: calcular a média de dias de férias dos funcionários em cada departamento
 SELECT
-  d.nome_departamento,                    -- nome do departamento
-  AVG(fer.dias) AS media_dias_ferias      -- média de dias de férias no departamento
-FROM Departamentos d
-JOIN Funcionarios f ON d.id_departamento = f.id_departamento
-JOIN Ferias fer ON f.id_funcionario = fer.id_funcionario
+  d.nome,                    -- nome do departamento
+  AVG(fer.num_dias) AS media_dias_ferias      -- média de dias de férias no departamento
+FROM departamentos AS d
+JOIN funcionarios AS f 
+ON d.id_depart = f.id_depart
+JOIN ferias AS fer 
+ON f.id_fun = fer.id_fun
 -- agrupa por departamento para calcular a média de férias de cada um
-GROUP BY d.id_departamento;
+GROUP BY d.nome;
 
 ------------------------------------------------------------------------------
 
---6.Comparação com média global nas formações
+--6.Comparação com média global nas formações (vista)
 
 -- Objetivo: listar formações cujo número de aderentes está acima da média de todas as formações
+-- é usada a funcao calcular_num_aderentes_formacao para este efeito
 SELECT
-  f.id_formacao,
+  f.id_for,
   f.nome_formacao,
-  f.num_aderentes
-FROM Formacoes f
+  calcular_num_aderentes_formacao(f.id_for) AS num_aderentes
+FROM formacoes AS f
 -- compara cada formação com a média global de aderentes (subquery calcula essa média)
-WHERE f.num_aderentes > (
-  SELECT AVG(num_aderentes) 
-  FROM formacoes)
-ORDER BY f.num_aderentes DESC;
+WHERE calcular_num_aderentes_formacao(f.id_for) >
+  (SELECT AVG(calcular_num_aderentes_formacao(id_for)) FROM formacoes)
+ORDER BY  calcular_num_aderentes_formacao(f.id_for) DESC;
 
 -----------------------------------------------------------------------------
 
@@ -117,16 +122,17 @@ ORDER BY f.id_fun ASC;
 
 ---------------------------------------------------------------------------------
 
---8. Funcionário com mais dias de férias
+--8. Funcionário com mais dias de férias (vista)
 
--- Objetivo: identificar o funcionário com mais dias de férias
+-- Objetivo: identificar o/os funcionário com mais dias de férias
 SELECT
-  f.nome,        -- nome do funcionário
-  fer.dias       -- número de dias de férias
-FROM Funcionarios f
-JOIN Ferias fer ON f.id_funcionario = fer.id_funcionario
+  f.primeiro_nome,        -- nome do funcionário
+  fer.num_dias       -- número de dias de férias
+FROM funcionarios AS f
+JOIN ferias AS fer ON 
+f.id_fun = fer.id_fun
 -- subquery identifica o valor máximo de dias de férias
-WHERE fer.dias = (SELECT MAX(dias) FROM Ferias);
+WHERE fer.num_dias = (SELECT MAX(num_dias) FROM ferias);
 
 --------------------------------------------------------------------------------------------
 
@@ -145,19 +151,22 @@ GROUP BY d.id_departamento;
 
 ----------------------------------------------------------------------
 
---10. Dependentes e funcionário respetivo
+--10. Dependentes e funcionário respetivo (vista)
 
 -- Objetivo: mostrar cada dependente com o respetivo funcionário titular e o departamento desse funcionário
 SELECT
-  d.nome           AS nome_dependente,      -- nome do dependente (atributo da entidade Dependentes)
-  d.parentesco,                                 -- parentesco com o funcionário
-  f.id_funcionario, f.nome  AS nome_funcionario, -- id e nome do funcionário titular
-  dep.nome_departamento                         -- nome do departamento do funcionário
+  f.id_fun, 
+  f.primeiro_nome || ' '|| f.ultimo_nome AS nome_funcionario, -- id e nome do funcionário titular
+  dep.nome   as nome_dep,                      -- nome do departamento do funcionário
+  STRING_AGG(d.nome || ' (' || d.parentesco || ')', ', ') AS dependentes -- agrega todos os dependnetes numa unica linha
 FROM dependentes AS d
 -- junta Dependentes com Funcionarios para saber quem é o titular
-JOIN Funcionarios f ON d.id_funcionario = f.id_funcionario
+JOIN Funcionarios f ON d.id_fun = f.id_fun
 -- junta Funcionarios com Departamentos para saber a qual departamento o titular pertence
-JOIN Departamentos dep ON f.id_departamento = dep.id_departamento;
+JOIN departamentos AS dep 
+ON f.id_depart = dep.id_depart
+GROUP BY f.id_fun, f.primeiro_nome, f.ultimo_nome, dep.nome -- necessário devido ao string_agg
+ORDER BY nome_funcionario; -- orderna por ordem alfabética
 
 
 -----------------------------------------------------------------------------
@@ -358,4 +367,36 @@ JOIN dependentes AS d
   ON f.id_fun = d.id_fun 
 WHERE  d.sexo = 'Feminino'
 GROUP BY nome_completo, s.salario_liquido;
--- uma vez que temos já funcionários e salários na query principal
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+-- 22. Média de dependentes femininos por departamento
+
+SELECT 
+d.nome,
+f.id_depart, 
+-- num_fem calculado abaixo, coalesce para cotar pessoas sem dependentes cmo zero, não como null
+COALESCE(AVG(dep.num_fem),0) AS media_fem
+-- subquerry usada para da entidade dependentes ser filtrada apenas pessoas do sexo feminino e associar ao id_fun
+-- daqui se cria num_fem usado para caclular a média acima referida
+FROM (
+  SELECT 
+  de.id_fun, 
+  COUNT(*) 
+AS num_fem
+  
+  FROM dependentes AS de
+  WHERE de.sexo = 'Feminino' 
+  GROUP BY de.id_fun
+) AS dep
+
+-- left joins usados para associar id_depart e nome do departamento à média, agrupando os com o group by
+-- left join, não join, para garantir que mesmo departamentos sem dependentes femininos são incluídos  
+
+LEFT JOIN funcionarios AS f 
+ON f.id_fun = dep.id_fun
+LEFT JOIN departamentos as d 
+ON d.id_depart = f.id_depart
+GROUP BY d.nome, f.id_depart;
+
+
