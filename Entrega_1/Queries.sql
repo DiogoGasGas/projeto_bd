@@ -104,16 +104,17 @@ ORDER BY  calcular_num_aderentes_formacao(f.id_for) DESC;
 
 -----------------------------------------------------------------------------
 
--- 7. funcionários com benificio do tipo 'Seguro Saúde' com valor deste acima da média (vista)
+-- 7. funcionários com benificio do tipo 'Seguro Saúde' com prémio de benefícios acima da média (vista)
 
 SELECT 
 f.id_fun,
 f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
-SUM(b.valor) AS tot_benef
+SUM(b.valor) AS tot_benef  -- soma dos valores acumulados de benefícios que um funcionário possa ter
 
 FROM funcionarios AS f
 JOIN beneficios AS b 
 ON f.id_fun = b.id_fun
+-- se
 WHERE b.tipo = 'Seguro Saúde'
 GROUP BY nome_completo, f.id_fun
 HAVING SUM(b.valor) > (select AVG(valor) from beneficios where tipo = 'Seguro Saúde')
@@ -140,13 +141,16 @@ WHERE fer.num_dias = (SELECT MAX(num_dias) FROM ferias);
 
 -- Objetivo: calcular a média de pontuação de avaliação por departamento
 SELECT
-  d.nome_departamento,            -- nome do departamento
-  AVG(a.pontuacao) AS media_pontuacao -- média da pontuação de avaliação dos funcionários do departamento
-FROM Avaliacoes a
-JOIN Funcionarios f ON a.id_funcionario = f.id_funcionario
-JOIN Departamentos d ON f.id_departamento = d.id_departamento
+  d.nome AS nome_depart,            -- nome do departamento
+  AVG(a.avaliacao_num) AS media_aval -- média da pontuação de avaliação dos funcionários do departamento
+FROM avaliacoes AS a
+JOIN funcionarios f 
+  ON a.id_fun = f.id_fun
+JOIN departamentos AS d 
+  ON f.id_depart = d.id_depart
 -- agrupa por departamento para calcular a média de cada um
-GROUP BY d.id_departamento;
+GROUP BY d.id_depart
+ORDER BY media_aval DESC;
 
 
 ----------------------------------------------------------------------
@@ -171,18 +175,33 @@ ORDER BY nome_funcionario; -- orderna por ordem alfabética
 
 -----------------------------------------------------------------------------
 
---11. Vagas
+--11. Vagas (vista)
 
 -- Objetivo: calcular a média de candidatos por departamento, com o número de vagas em cada departamento
 SELECT
-  dep.nome_departamento,                        -- departamento
+  dep.id_depart,
+  dep.nome AS nome_depart,                        -- departamento
   COUNT(v.id_vaga) AS num_vagas,                -- quantas vagas existem no departamento
-  AVG(v.num_candidatos) AS media_candidatos     -- média de candidatos por vaga nesse departamento
-FROM vagas AS v
--- assume-se que Vagas tem uma FK id_departamento (relação 'tem' com Departamentos)
-JOIN departamentos AS dep
+  -- média de candidatos por vaga nesse departamento, coalesce para cotar null como 0
+  COALESCE(AVG(cand_a.num_cand), 0)  AS media_candidatos     
+FROM departamentoS as dep
+-- associar todas as vagas ao seu departamento
+LEFT JOIN vagas AS v
   ON v.id_depart = dep.id_depart
-GROUP BY dep.id_depart  
+
+-- a subquery calcula o número de candidatos por vaga, num_cand
+-- o LEFT JOIN associa esses dados às vagas
+LEFT JOIN ( 
+  
+  SELECT 
+  id_vaga, 
+  COUNT(id_cand) as num_cand
+  FROM candidato_a
+  GROUP BY id_vaga) AS cand_a
+  
+  ON cand_a.id_vaga = v.id_vaga 
+
+GROUP BY dep.id_depart, dep.nome 
 -- ordena para ver primeiro os departamentos com maior média de candidatos
 ORDER BY media_candidatos DESC;
 
@@ -209,6 +228,7 @@ SELECT
 FROM funcionarios AS f 
 JOIN avaliacoes AS av ON f.id_fun = av.id_fun
 WHERE av.autoavaliacao IS NULL;
+-- se a autoavaliacao é null, é porque não existe
 
 ------------------------------------------------------------------------------------
 
@@ -216,10 +236,12 @@ WHERE av.autoavaliacao IS NULL;
 SELECT 
     d.id_depart,
     d.nome,
-    COUNT(fal.id_fun) AS total_faltas
+    COUNT(fal.id_fun) AS total_faltas -- contar as faltas dos funcionarios
 FROM departamentos d
+-- vão ser associados funcionarios aos departamentos
 LEFT JOIN funcionarios AS f 
   ON d.id_depart = f.id_depart
+-- associar faltas a funcionários
 LEFT JOIN faltas AS fal 
   ON f.id_fun = fal.id_fun
 GROUP BY d.nome, d.id_depart
@@ -253,16 +275,24 @@ ORDER BY
 ---------------------------------------------
 --- 16- Funcionários que já trabalharam na mesma empresa
 
-SELECT h.nome_empresa, STRING_AGG(f.primeiro_nome || ' ' || f.ultimo_nome, ', ') AS funcionarios
-FROM historico_empresas as h
-JOIN funcionarios f ON f.id_fun = h.id_fun
-group by h.nome_empresa
+SELECT 
+  h.nome_empresa, 
+  -- agrega os nomes completos dos funcionários que trabalharam nessa empresa
+  STRING_AGG(f.primeiro_nome || ' ' || f.ultimo_nome, ', ') AS funcionarios
+FROM historico_empresas AS
+  -- junta histórico aos funcionários
+JOIN funcionarios AS f 
+  ON f.id_fun = h.id_fun
+GROUP BY h.nome_empresa
+  -- mantém apenas as empresas com mais de um funcionário, ou seja, onde pelo menos dois já trabalharam
 HAVING COUNT(f.id_fun) > 1;
 
 ------------------------------------------------------------------------------------------
 --17. Funcionários sem faltas registadas
 
-select f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo, count(fal.data) as total_faltas
+select 
+  f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
+  COUNT(fal.data) as total_faltas
 from funcionarios f
 left join faltas fal on f.id_fun = fal.id_fun
 group by f.primeiro_nome, f.ultimo_nome
@@ -321,9 +351,11 @@ f.id_fun,
 f.primeiro_nome || ' ' || f.ultimo_nome AS nome_completo,
 sal.salario_bruto,
 d.nome,
-
-(SELECT COUNT(*)
+-- subquerry para obter o número de formações por funcionários
+(SELECT 
+  COUNT(*)
 FROM teve_formacao AS teve
+  -- associar funcionários às formações a que foram
 JOIN formacoes AS fo
 ON teve.id_for = fo.id_for
 AND (f.id_fun = teve.id_fun)
@@ -332,7 +364,7 @@ AND (f.id_fun = teve.id_fun)
 FROM funcionarios AS f 
 JOIN departamentos AS d
     ON f.id_depart = d.id_depart
-JOIN salario as Sal 
+JOIN salario as sal 
     ON f.id_fun = sal.id_fun
     AND sal.salario_bruto > (                  
         SELECT AVG(s2.salario_bruto)          
@@ -341,12 +373,12 @@ JOIN salario as Sal
             ON f2.id_fun = s2.id_fun
         WHERE f2.id_depart = f.id_depart);
 
-
+- sahjhdhd
 -- nesta subquerry vamos filtrar os funcionários por departamento e daí calcular a média salarial por departamento
 -- para depois comparar com o salário bruto do funcionário em questão
 -- ou seja, para cada funcionário, vamos calcular a média salarial do departamento a que ele pertence
 -- e verificar se o salário bruto dele é maior que essa 
--- daí ser necessário atribuir novas variaveis a funcionários e salários
+-- daí ser necessário atribuir novas variaveis a funcionários e salários (f2 e s2) para comparar com (f)
 
 -------------------------------------------------------------------------------------------------------------------------------
 --21. Funcionarios auferem salário mais de 1500 euros, têm um total de férias atribuidas entre 10 e 15, com numero de dependentes do sexo feminino.
@@ -381,13 +413,12 @@ COALESCE(AVG(dep.num_fem),0) AS media_fem
 -- daqui se cria num_fem usado para caclular a média acima referida
 FROM (
   SELECT 
-  de.id_fun, 
-  COUNT(*) 
-AS num_fem
+  id_fun, 
+  COUNT(*) AS num_fem
   
-  FROM dependentes AS de
-  WHERE de.sexo = 'Feminino' 
-  GROUP BY de.id_fun
+  FROM dependentes
+  WHERE sexo = 'Feminino' 
+  GROUP BY id_fun
 ) AS dep
 
 -- left joins usados para associar id_depart e nome do departamento à média, agrupando os com o group by
