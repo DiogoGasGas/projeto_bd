@@ -1,15 +1,13 @@
-
-
-
 set search_path to bd054_schema, public;
+
+
+
 
 -- triggers
 
 
 
-
-set search_path to bd054_schema, public;
-
+--- criar trigger para validar dias de ferias
 
 
 CREATE OR REPLACE FUNCTION validar_dias_ferias()
@@ -30,14 +28,17 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--- Trigger associado
+CREATE TRIGGER trg_validar_dias_ferias
+BEFORE INSERT OR UPDATE ON ferias
+FOR EACH ROW
+EXECUTE FUNCTION validar_dias_ferias();
 
 
 
 
 
-SET search_path TO bd054_schema, public;
-
-SET search_path TO bd054_schema, public;
+--- trigger para calcular salario liquido
 
 CREATE OR REPLACE FUNCTION calc_salario_liquido()
 RETURNS TRIGGER AS $$
@@ -66,7 +67,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger associado
-DROP TRIGGER IF EXISTS trg_calc_salario_liquido ON salario;
 
 CREATE TRIGGER trg_calc_salario_liquido
 BEFORE INSERT OR UPDATE ON salario
@@ -78,10 +78,17 @@ EXECUTE FUNCTION calc_salario_liquido();
 
 
 
+
+
+
+--- trigger para registar mudanca de cargo no historico_empresas
+
 CREATE OR REPLACE FUNCTION registrar_mudanca_cargo()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Verifica se o cargo foi alterado
     IF OLD.cargo IS DISTINCT FROM NEW.cargo THEN
+        -- Regista a mudança na tabela de histórico
         INSERT INTO historico_empresas (id_fun, nome_empresa, nome_departamento, cargo, data_inicio, data_fim)
         VALUES (NEW.id_fun, 'Empresa Atual', 'Departamento Atual', NEW.cargo, CURRENT_DATE, NULL);
     END IF;
@@ -89,6 +96,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger associado à função
 CREATE TRIGGER trg_registrar_mudanca_cargo
 AFTER UPDATE ON funcionarios
 FOR EACH ROW
@@ -101,16 +109,22 @@ EXECUTE FUNCTION registrar_mudanca_cargo();
 
 
 
+
+-- Trigger que impede de inserir funcionários com menos de 16 anos
 CREATE OR REPLACE FUNCTION validar_idade_funcionario()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Verifica a idade mínima
     IF NEW.data_nascimento > CURRENT_DATE - INTERVAL '16 years' THEN
-        RAISE EXCEPTION 'O funcionário % tem idade inferior a 16 anos', NEW.primeiro_nome || ' ' || NEW.ultimo_nome;
+        RAISE EXCEPTION 
+            'O funcionário % tem idade inferior a 16 anos', 
+            NEW.primeiro_nome || ' ' || NEW.ultimo_nome;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger associado
 CREATE TRIGGER trg_validar_idade_funcionario
 BEFORE INSERT ON funcionarios
 FOR EACH ROW
@@ -120,46 +134,52 @@ EXECUTE FUNCTION validar_idade_funcionario();
 
 
 
-
+-- Trigger que cria automaticamente um utilizador ao inserir um funcionário
 CREATE OR REPLACE FUNCTION cria_utilizador()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Insere o novo utilizador com password temporária
     INSERT INTO utilizadores (id_fun, password)
     VALUES (NEW.id_fun, 'password_temporaria');
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger associado
 CREATE TRIGGER trg_cria_utilizador
 AFTER INSERT ON funcionarios
 FOR EACH ROW
 EXECUTE FUNCTION cria_utilizador();
+-- Elimina as permissões associadas ao funcionário ao apagar o funcionário
 
 
 
 
 
-
-
+-- Trigger que remove permissões associadas a um funcionário eliminado
 CREATE OR REPLACE FUNCTION delete_permissoes()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Apaga as permissões do funcionário removido
     DELETE FROM permissoes WHERE id_fun = OLD.id_fun;
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger associado
 CREATE TRIGGER trg_delete_permissoes
 AFTER DELETE ON funcionarios
 FOR EACH ROW
 EXECUTE FUNCTION delete_permissoes();
+-- trigger para calcular num dias ferias
 
 
 
 
-SET search_path TO bd054_schema, public;
 
--- Função do trigger
+
+-- Trigger que calcula o numero o numero de dias de ferias automaticamente
+
 CREATE OR REPLACE FUNCTION calcular_num_dias_ferias()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -177,8 +197,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
--- Trigger associado à tabela ferias
+-- Trigger associado 
 CREATE TRIGGER trg_calcular_num_dias_ferias
 BEFORE INSERT OR UPDATE ON ferias
 FOR EACH ROW
@@ -211,7 +230,7 @@ EXECUTE FUNCTION calcular_num_dias_ferias();
 
 -- functions
 
-SET search_path TO bd054_schema, public;
+-- Função para calcular o total de dias de férias permitidos para um funcionário
 
 CREATE OR REPLACE FUNCTION calcular_total_dias_permitidos(p_id_fun INT)
 RETURNS INT AS $$
@@ -258,10 +277,10 @@ $$ LANGUAGE plpgsql;
 
 
 
-SET search_path TO bd054_schema, public;
 
 
-set search_path to bd054_schema, public;
+-- Função para calcular os descontos sobre o salário bruto
+
 create or replace function descontos(p_salario_bruto NUMERIC)
 returns NUMERIC as $$
 declare
@@ -280,38 +299,39 @@ $$ language plpgsql;
 
 
 
---num funcioanrios
-set search_path to bd054_schema, public;
-create or replace function calcular_num_total_funcionarios(p_id_fun INT)
-returns INT as $$
-declare
-    v_num_total_funcionarios INT;
-begin
-    select count(*) into v_num_total_funcionarios
-    from funcionarios
-    where id_fun = p_id_fun;
+-- Função que calcula o número total de funcionários na base de dados
+CREATE OR REPLACE FUNCTION calcular_num_total_funcionarios()
+RETURNS INT AS $$
+DECLARE
+    v_num_total_funcionarios INT;  -- Guarda o total de funcionários
+BEGIN
+    -- Conta todos os registos na tabela 'funcionarios'
+    SELECT COUNT(*) INTO v_num_total_funcionarios
+    FROM funcionarios;
 
-    return v_num_total_funcionarios;
-end;
-$$ language plpgsql;
+    -- Retorna o total calculado
+    RETURN v_num_total_funcionarios;
+END;
+$$ LANGUAGE plpgsql;
 
 
 
-    --num funcionarios / departamento
 
-    create or replace function calcular_num_funcionarios_departamento(p_id_depart INT)
-    returns INT as $$
-    declare
-        v_num_funcionarios_departamento INT;
-    begin
-        select count(*) into v_num_funcionarios_departamento
-        from funcionarios
-        where id_depart = p_id_depart;
+-- Função que calcula o número de funcionários de um determinado departamento
+CREATE OR REPLACE FUNCTION calcular_num_funcionarios_departamento(p_id_depart INT)
+RETURNS INT AS $$
+DECLARE
+    v_num_funcionarios_departamento INT;  -- Guarda o total de funcionários do departamento
+BEGIN
+    -- Conta quantos funcionários pertencem ao departamento indicado
+    SELECT COUNT(*) INTO v_num_funcionarios_departamento
+    FROM funcionarios
+    WHERE id_depart = p_id_depart;
 
-        return v_num_funcionarios_departamento;
-    end;
-    $$ language plpgsql;
-
+    -- Retorna o total calculado
+    RETURN v_num_funcionarios_departamento;
+END;
+$$ LANGUAGE plpgsql;
 
 
 
