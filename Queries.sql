@@ -264,12 +264,16 @@ having count(fal.data) = 0
 
 SELECT 
     d.nome,
+    
     ROUND((COUNT(DISTINCT teve.id_fun)::decimal / calcular_num_funcionarios_departamento(d.id_depart)::decimal) * 100, 2) AS taxa_adesao
+    -- Round arredonda a 2 casas decimais, o count com recurso ao distinct conta os funcionários que participaram em pelo menos uma formação, dividindo-se pelo numero total de pessoas no departamento
 FROM departamentos AS d
 LEFT JOIN funcionarios AS f 
   ON d.id_depart = f.id_depart
+  -- agrupar funcionários por departamento
 LEFT JOIN teve_formacao AS teve 
   ON f.id_fun = teve.id_fun
+  -- agrupar funcionários pelas presenças a formações que tiveram
 GROUP BY d.nome, d.id_depart
 ORDER BY taxa_adesao DESC;
 
