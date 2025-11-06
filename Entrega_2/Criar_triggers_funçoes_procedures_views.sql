@@ -210,34 +210,42 @@ EXECUTE FUNCTION delete_permissoes();
 
 -- Função trigger que valida se a data de nascimento do funcionário responsável
 -- é anterior à do seu dependente (ou seja, o funcionário deve ser mais velho)
+-- Trigger que valida que o dependente "Filho(a)" nasceu depois do funcionário
 CREATE OR REPLACE FUNCTION validar_datas_dependentes()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_data_funcionario DATE;  -- Variável para guardar a data de nascimento do funcionário
+    v_data_funcionario DATE;  -- Data de nascimento do funcionário (pai/mãe)
 BEGIN
-    -- Obtém a data de nascimento do funcionário (responsável) a partir da tabela 'funcionarios'
-    SELECT data_nascimento INTO v_data_funcionario
-    FROM funcionarios
-    WHERE id_fun = NEW.id_fun;
+    -- Só executa se o parentesco for "Filho(a)"
+    IF NEW.parentesco = 'Filho(a)' THEN
+        
+        -- Busca a data de nascimento do funcionário associado
+        SELECT data_nascimento INTO v_data_funcionario
+        FROM funcionarios
+        WHERE id_fun = NEW.id_fun;
 
-    -- Verifica se o funcionário é mais novo (ou da mesma idade) que o dependente
-    IF v_data_funcionario >= NEW.data_nascimento THEN
-        RAISE EXCEPTION 
-            'O funcionário (ID %) não pode ser mais novo que o dependente.', NEW.id_fun;
+        -- Caso não exista funcionário correspondente
+        IF v_data_funcionario IS NULL THEN
+            RAISE EXCEPTION 'Funcionário com ID % não encontrado.', NEW.id_fun;
+        END IF;
+
+        -- Garante que o dependente (filho) nasceu depois do funcionário
+        IF NEW.data_nascimento <= v_data_funcionario THEN
+            RAISE EXCEPTION 
+                'O dependente (Filho(a)) deve nascer após o funcionário (ID %).', NEW.id_fun;
+        END IF;
     END IF;
 
-    -- Se tudo estiver correto, permite a inserção/atualização
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger associado à tabela 'dependentes'
--- É executado antes de cada inserção ou atualização,
--- para garantir que a relação de idade é coerente
 CREATE TRIGGER trg_validar_datas_dependentes
 BEFORE INSERT OR UPDATE ON dependentes
 FOR EACH ROW
 EXECUTE FUNCTION validar_datas_dependentes();
+
 
 
 
