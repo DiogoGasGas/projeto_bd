@@ -266,36 +266,43 @@ SELECT
     d.nome,
     
     ROUND((COUNT(DISTINCT teve.id_fun)::decimal / calcular_num_funcionarios_departamento(d.id_depart)::decimal) * 100, 2) AS taxa_adesao
-    -- Round arredonda a 2 casas decimais, o count com recurso ao distinct conta os funcionários que participaram em pelo menos uma formação, dividindo-se pelo numero total de pessoas no departamento
+    -- Round arredonda a 2 casas decimais, o count com recurso ao distinct conta os funcionários que participaram em pelo menos uma formação, 
+    -- dividindo-se pelo numero total de pessoas no departamento
 FROM departamentos AS d
 LEFT JOIN funcionarios AS f 
   ON d.id_depart = f.id_depart
-  -- agrupar funcionários por departamento
+  -- associar funcionários por departamento
 LEFT JOIN teve_formacao AS teve 
   ON f.id_fun = teve.id_fun
-  -- agrupar funcionários pelas presenças a formações que tiveram
+  -- associar funcionários pelas presenças a formações que tiveram
 GROUP BY d.nome, d.id_depart
 ORDER BY taxa_adesao DESC;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---19.funcionarios trabalharam na empresa Marques, auferem atualmente mais de 500 euros brutos e têm seguro de saúde
+--19.funcionarios trabalharam na empresa Marques, auferem atualmente mais de 870 euros brutos e têm seguro de saúde
 SELECT
 DISTINCT(f.primeiro_nome || ' ' || f.ultimo_nome) As nome_completo,
+  -- o distinct é necessário uma vez que um funcionário pode aparecer repetido em benefícios diferentes ou empresas
 h.nome_empresa AS trabalhou_em,
 s.salario_bruto,
 b.tipo
 FROM funcionarios AS f
 JOIN historico_empresas AS h 
     ON f.id_fun = h.id_fun
+  -- associar os funcionários ao seu histórico
     AND (h.nome_empresa = 'Marques')
+  -- filtrar apenas para a empresa Marques
 JOIN salario As s 
     ON f.id_fun = s.id_fun
-    AND s.salario_bruto > 500 
+  -- associar funcionários ao seu salário
+    AND s.salario_bruto > 870 
+  -- filtrar para salários superiores a 870 euros
 JOIN beneficios AS b
     ON f.id_fun = b.id_fun 
     AND b.tipo = 'Seguro Saúde';
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  -- definir benefício pretendido
+--------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- 20.Listar os funcionários que ganham acima da média salarial do seu próprio departamento, indicando-o, mostrando também o número de formações concluídas.
 
