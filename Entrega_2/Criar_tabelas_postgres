@@ -57,7 +57,6 @@ CREATE TABLE salario (
     id_fun INT,
     data_inicio DATE,
     salario_bruto DECIMAL(10,2),
-    descontos DECIMAL(10,2),
     salario_liquido DECIMAL(10,2),
     PRIMARY KEY (id_fun, data_inicio),
     FOREIGN KEY (id_fun, data_inicio) REFERENCES remuneracoes(id_fun, data_inicio)
@@ -110,6 +109,8 @@ CREATE TABLE dependentes (
     CHECK (sexo IN ('Masculino', 'Feminino', 'Outro')) 
 );
 
+--- Criar tabela faltas entidade fraca dos funcionarios
+
 CREATE TABLE faltas (
     id_fun INT,
     data DATE,
@@ -120,10 +121,12 @@ CREATE TABLE faltas (
     ON UPDATE CASCADE
 );
 
+
+--- Criar tabela historico_empresas entidade fraca dos funcionarios
+
 CREATE TABLE historico_empresas (
     id_fun INT,
     nome_empresa VARCHAR(50),
-    nome_departamento VARCHAR(50),
     cargo VARCHAR(100), 
     data_inicio DATE,
     data_fim DATE,
@@ -133,6 +136,9 @@ CREATE TABLE historico_empresas (
     ON UPDATE CASCADE,
     CHECK (data_fim IS NULL OR data_fim > data_inicio)
 );
+
+
+--- Criar tabela candidatos 
 
 CREATE TABLE candidatos (
     id_cand INT,
@@ -144,6 +150,10 @@ CREATE TABLE candidatos (
     PRIMARY KEY (id_cand)
 );
 
+
+--- Criar tabela vagas
+
+
 CREATE TABLE vagas (
     id_vaga INT,
     data_abertura DATE,
@@ -153,6 +163,9 @@ CREATE TABLE vagas (
     FOREIGN KEY (id_depart) REFERENCES departamentos(id_depart),
     CHECK (estado IN ('Aberta', 'Fechada', 'Suspensa'))
 );
+
+
+--- Criar tabela candidato_a (tabela associativa entre candidatos e vagas)
 
 CREATE TABLE candidato_a (
     id_cand INT,
@@ -170,6 +183,9 @@ CREATE TABLE candidato_a (
     CHECK (estado IN ('Submetido', 'Em análise', 'Entrevista', 'Rejeitado', 'Contratado'))
 );
 
+
+--- Criar tabela requisitos_vaga (tabela fraca de vagas)
+
 CREATE TABLE requisitos_vaga (
     id_vaga INT,
     requisito VARCHAR(100),
@@ -178,6 +194,9 @@ CREATE TABLE requisitos_vaga (
     ON DELETE CASCADE 
     ON UPDATE CASCADE
 );
+
+
+--- Criar tabela formacoes
 
 CREATE TABLE formacoes (
     id_for INT,
@@ -191,6 +210,8 @@ CREATE TABLE formacoes (
     CHECK (estado IN ('Planeada', 'Em curso', 'Concluida', 'Cancelada'))
 );
 
+
+--- Criar tabela teve_formacao (tabela associativa entre funcionarios e formacoes)
 CREATE TABLE teve_formacao (
     id_fun INT,
     id_for INT, 
@@ -206,6 +227,9 @@ CREATE TABLE teve_formacao (
     ON UPDATE CASCADE,
     CHECK (data_fim IS NULL OR data_fim >= data_inicio) 
 );
+
+
+--- Criar tabela avaliacoes
 
 CREATE TABLE avaliacoes (
     id_fun INT,
@@ -223,6 +247,9 @@ CREATE TABLE avaliacoes (
     ON UPDATE CASCADE
 );
 
+
+--- Criar tabela utilizadores entidade fraca dos funcionarios
+
 CREATE TABLE utilizadores (
     id_fun INT,
     password VARCHAR(30) NOT NULL,
@@ -231,6 +258,8 @@ CREATE TABLE utilizadores (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+
+--- Criar tabela permissoes
 
 CREATE TABLE permissoes (
     id_fun INT,

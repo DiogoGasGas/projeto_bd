@@ -1,0 +1,22 @@
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# Bases de dados / logs
+*.sqlite
+*.db
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Temporários
+*.tmp
+*.bak

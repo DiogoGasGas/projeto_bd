@@ -1,0 +1,6 @@
+Dependentes - data de nascimento dos pais precisa ser maior de diferença do filho, e vice versa
+Remuneracoes - data de inicio vem antes de data fim, data de inicio tem de acontecer antes da data atual
+Salario - acima do salario minimo, meter salario em todos
+Benificios - data de inicio antes da data atual
+Faltas - data da falta antes da data atual
+
