@@ -278,20 +278,20 @@ $$ LANGUAGE plpgsql;
 
 
 
-
--- Função para calcular os descontos sobre o salário bruto
-
-create or replace function descontos(p_salario_bruto NUMERIC)
-returns NUMERIC as $$
-declare
-    v_descontos NUMERIC;    
-begin
-    -- Exemplo simples: 11% de TAxa de segurança social e 12% de IRS
+-- Função para calcular o total de descontos sobre o salário bruto
+CREATE OR REPLACE FUNCTION descontos(p_salario_bruto NUMERIC)
+RETURNS NUMERIC AS $$
+DECLARE
+    v_descontos NUMERIC;  -- Guarda o valor total dos descontos
+BEGIN
+    -- Aplica uma taxa de 11% de Segurança Social e 12% de IRS
     v_descontos := p_salario_bruto * (0.11 + 0.12);
 
-    return v_descontos;
-end;
-$$ language plpgsql;
+    -- Retorna o valor total dos descontos calculado
+    RETURN v_descontos;
+END;
+$$ LANGUAGE plpgsql;
+
 
 
 
